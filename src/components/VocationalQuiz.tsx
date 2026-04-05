@@ -122,12 +122,12 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-background/90 backdrop-blur-md"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-background/95 backdrop-blur-md"
     >
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="w-full max-w-lg mx-4 glass-panel rounded-2xl p-8 relative"
+        className="w-full max-w-lg mx-4 glass-panel rounded-2xl p-8 md:p-10 relative border border-border"
       >
         <button
           onClick={onClose}
@@ -137,7 +137,7 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
         </button>
 
         {/* Progress bar */}
-        <div className="w-full h-1 bg-secondary rounded-full mb-8 overflow-hidden">
+        <div className="w-full h-1.5 bg-muted rounded-full mb-8 overflow-hidden border border-border/60">
           <motion.div
             className="h-full bg-primary rounded-full"
             animate={{ width: `${progress}%` }}
@@ -157,7 +157,7 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
               <p className="text-xs text-muted-foreground mb-2">
                 Pregunta {step + 1} de {QUESTIONS.length}
               </p>
-              <h3 className="font-display text-lg font-bold text-foreground mb-6">
+              <h3 className="font-display text-xl font-bold text-foreground mb-6 leading-snug">
                 {QUESTIONS[step].text}
               </h3>
 
@@ -166,9 +166,9 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
                   <button
                     key={i}
                     onClick={() => handleAnswer(i)}
-                    className="w-full text-left p-4 rounded-xl border border-border bg-secondary/50 hover:border-primary hover:bg-secondary transition-all text-sm text-secondary-foreground group"
+                    className="w-full text-left p-4 rounded-xl border border-border bg-card shadow-sm hover:border-primary hover:bg-accent hover:shadow-md transition-[border-color,background-color,box-shadow] text-sm text-foreground group"
                   >
-                    <span className="group-hover:text-primary transition-colors">{opt.label}</span>
+                    <span className="group-hover:text-primary group-hover:font-medium transition-colors">{opt.label}</span>
                   </button>
                 ))}
               </div>
@@ -191,7 +191,7 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles size={20} className="text-primary" />
-                <h3 className="font-display text-lg font-bold text-foreground">
+                <h3 className="font-display text-xl font-bold text-foreground tracking-tight">
                   Tus áreas de afinidad
                 </h3>
               </div>
@@ -203,7 +203,7 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
                 {getResults().map((r, i) => (
                   <div
                     key={r.tag}
-                    className="flex items-center gap-3 p-4 rounded-xl surface-elevated border border-border"
+                    className="flex items-center gap-3 p-4 rounded-xl surface-elevated border border-border hover:border-primary/15 transition-[border-color,box-shadow]"
                   >
                     <span className="text-2xl">{r.emoji}</span>
                     <div className="flex-1">
@@ -228,13 +228,13 @@ export default function VocationalQuiz({ onClose }: { onClose: () => void }) {
               <div className="flex gap-3">
                 <button
                   onClick={restart}
-                  className="flex-1 py-3 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex-1 py-3 rounded-xl border border-border bg-background text-sm text-muted-foreground hover:text-foreground hover:border-primary/25 hover:bg-muted transition-colors"
                 >
                   Reintentar
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                  className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:bg-primary-hover hover:shadow-md transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   Continuar explorando
                 </button>

@@ -34,7 +34,7 @@ export default function ImpactView({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-background/98 backdrop-blur-md overflow-y-auto"
     >
       <div className="max-w-4xl mx-auto px-6 py-12">
         <button
@@ -49,10 +49,10 @@ export default function ImpactView({ onClose }: { onClose: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-3 tracking-tight pb-4 border-b border-border">
             Impacto Institucional
           </h1>
-          <p className="text-muted-foreground mb-10 max-w-xl">
+          <p className="text-muted-foreground text-base md:text-lg mb-12 max-w-xl leading-relaxed">
             Nuestro compromiso va más allá de las aulas. Estos son los proyectos que 
             transforman la región.
           </p>
@@ -65,7 +65,7 @@ export default function ImpactView({ onClose }: { onClose: () => void }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.05 }}
-              className="surface-elevated border border-border rounded-2xl p-6 hover:border-primary/30 transition-colors"
+              className="surface-elevated border border-border rounded-2xl p-6 hover:border-primary/35 transition-[border-color,box-shadow]"
             >
               <p.icon size={28} className="text-primary mb-4" />
               <h3 className="font-display font-bold text-foreground mb-2">{p.title}</h3>

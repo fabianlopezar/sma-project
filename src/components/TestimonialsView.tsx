@@ -52,7 +52,7 @@ export default function TestimonialsView({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-background/98 backdrop-blur-md overflow-y-auto"
     >
       <div className="max-w-4xl mx-auto px-6 py-12">
         <button
@@ -67,10 +67,10 @@ export default function TestimonialsView({ onClose }: { onClose: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-3 tracking-tight pb-4 border-b border-border">
             Voces del Campus
           </h1>
-          <p className="text-muted-foreground mb-10 max-w-xl">
+          <p className="text-muted-foreground text-base md:text-lg mb-12 max-w-xl leading-relaxed">
             Historias reales de estudiantes que encontraron su propósito aquí. Sin guiones, sin filtros.
           </p>
         </motion.div>
@@ -82,7 +82,7 @@ export default function TestimonialsView({ onClose }: { onClose: () => void }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
-              className="surface-elevated border border-border rounded-2xl p-6 md:p-8"
+              className="surface-elevated border border-border rounded-2xl p-6 md:p-8 hover:border-primary/20 transition-[border-color,box-shadow]"
             >
               <Quote size={24} className="text-primary/30 mb-4" />
               <p className="text-foreground text-lg leading-relaxed mb-6 italic">

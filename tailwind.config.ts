@@ -51,9 +51,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "primary-hover": "hsl(var(--primary-hover))",
+        brand: {
+          accent: "hsl(var(--brand-accent))",
+        },
         gold: {
           DEFAULT: "hsl(var(--primary))",
-          glow: "hsl(var(--gold-glow))",
+          glow: "hsl(var(--brand-accent))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -89,8 +93,8 @@ export default {
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         "glow-pulse": {
-          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(40 85% 55% / 0.2)" },
-          "50%": { boxShadow: "0 0 40px -5px hsl(40 85% 55% / 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px -6px hsl(355 95% 46% / 0.2)" },
+          "50%": { boxShadow: "0 0 36px -4px hsl(355 95% 46% / 0.35)" },
         },
       },
       animation: {

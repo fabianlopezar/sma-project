@@ -8,7 +8,8 @@ import ProgramsView from '../components/ProgramsView';
 import TestimonialsView from '../components/TestimonialsView';
 import ImpactView from '../components/ImpactView';
 import CampusLifeView from '../components/CampusLifeView';
-import { Compass } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Compass, Map } from 'lucide-react';
 
 type ActiveView = null | 'orientacion' | 'programas' | 'testimonios' | 'impacto' | 'vida';
 
@@ -30,7 +31,7 @@ const Index = () => {
   const closeView = () => setActiveView(null);
 
   return (
-    <div className="w-full h-screen overflow-hidden relative">
+    <div className="w-full h-screen overflow-hidden relative bg-background">
       {/* 3D Scene */}
       <Suspense
         fallback={
@@ -55,11 +56,21 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-6 left-6 z-40"
+          className="fixed top-5 left-5 right-5 z-40 flex flex-wrap items-center justify-between gap-3 sm:top-6 sm:left-6 sm:right-6"
         >
-          <h2 className="font-display text-sm font-semibold text-foreground tracking-wider uppercase opacity-70">
-            Campus Virtual
-          </h2>
+          <div className="glass-panel rounded-2xl px-4 py-2.5">
+            <h2 className="font-display text-[11px] font-bold text-foreground tracking-[0.18em] uppercase leading-none">
+              Campus Virtual
+            </h2>
+          </div>
+          <Link
+            to="/mapa-referencia"
+            aria-label="Ver mapa de referencia en dos dimensiones"
+            className="glass-panel inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/25 transition-all duration-200"
+          >
+            <Map className="size-[15px] shrink-0 opacity-70" strokeWidth={2.25} />
+            Mapa 2D
+          </Link>
         </motion.div>
       )}
 
@@ -69,7 +80,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex gap-2 glass-panel rounded-full px-2 py-2"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex flex-wrap justify-center gap-1 glass-panel rounded-full px-1.5 py-1.5 max-w-[calc(100vw-1.5rem)] sm:bottom-6"
         >
           {[
             { id: 'orientacion', label: '🧠 Orientación' },
@@ -80,8 +91,9 @@ const Index = () => {
           ].map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveView(item.id as ActiveView)}
-              className="px-4 py-2 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all whitespace-nowrap"
+              className="px-3.5 py-2 rounded-full text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/90 transition-colors duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
             >
               {item.label}
             </button>

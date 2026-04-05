@@ -81,7 +81,7 @@ export default function ProgramsView({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-background/98 backdrop-blur-md overflow-y-auto"
     >
       <div className="max-w-5xl mx-auto px-6 py-12">
         <button
@@ -96,10 +96,10 @@ export default function ProgramsView({ onClose }: { onClose: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-3 tracking-tight pb-4 border-b border-border">
             Programas Académicos
           </h1>
-          <p className="text-muted-foreground mb-10 max-w-2xl">
+          <p className="text-muted-foreground text-base md:text-lg mb-12 max-w-2xl leading-relaxed">
             Cada programa está diseñado para formar profesionales que transformen su entorno. 
             Explora las opciones que se alinean con tu vocación.
           </p>
@@ -112,7 +112,7 @@ export default function ProgramsView({ onClose }: { onClose: () => void }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.05 }}
-              className="surface-elevated border border-border rounded-2xl p-6 hover:border-primary/30 transition-colors group"
+              className="surface-elevated border border-border rounded-2xl p-6 hover:border-primary/35 transition-[border-color,box-shadow] group"
             >
               <div className="flex items-start gap-4 mb-4">
                 <span className="text-3xl">{p.emoji}</span>
