@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Institucional: #FFFFFF, #F5F5F5, #333333, #DDDDDD, #E30613, #A0001C, #C8102E */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+
+    --primary: 355 95% 46%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 349 100% 31%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 20%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
+
+    --accent: 355 55% 96%;
+    --accent-foreground: 355 95% 40%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 87%;
+    --input: 0 0% 87%;
+    --ring: 355 95% 46%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 355 95% 46%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 87%;
+    --sidebar-ring: 355 95% 46%;
+
+    --brand-accent: 350 85% 42%;
+    --shadow-brand: 0 8px 30px -8px hsl(355 95% 46% / 0.22);
+    --shadow-card: 0 4px 24px -6px hsl(0 0% 0% / 0.08);
+    --shadow-card-hover: 0 12px 32px -8px hsl(0 0% 0% / 0.12);
+
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-gradient-brand {
+    background: linear-gradient(135deg, hsl(355 95% 46%), hsl(350 85% 42%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-panel {
+    background: hsl(0 0% 100% / 0.94);
+    backdrop-filter: blur(20px) saturate(1.15);
+    border: 1px solid hsl(0 0% 87% / 0.9);
+    box-shadow:
+      0 1px 2px hsl(0 0% 0% / 0.04),
+      0 8px 24px -6px hsl(0 0% 0% / 0.07);
+  }
+
+  .glow-primary {
+    box-shadow: var(--shadow-brand);
+  }
+
+  .surface-elevated {
+    background: hsl(0 0% 100%);
+    box-shadow: var(--shadow-card);
+  }
+
+  .surface-elevated:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(0 0% 96%);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 80%);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(355 95% 46% / 0.45);
+}
