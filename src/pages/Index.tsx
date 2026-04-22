@@ -1,6 +1,5 @@
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import CampusScene from '../components/CampusScene';
 import BuildingPanel from '../components/BuildingPanel';
 import IntroOverlay from '../components/IntroOverlay';
 import VocationalQuiz from '../components/VocationalQuiz';
@@ -9,10 +8,18 @@ import TestimonialsView from '../components/TestimonialsView';
 import ImpactView from '../components/ImpactView';
 import CampusLifeView from '../components/CampusLifeView';
 import InformacionView from '../components/InfoPanel';
+import ReferenceCampusMap from '../components/ReferenceCampusMap';
 import { Link } from 'react-router-dom';
-import { Compass, Map } from 'lucide-react';
+import { Map } from 'lucide-react';
 
-type ActiveView = null | 'orientacion' | 'programas' | 'testimonios' | 'impacto' | 'vida' | 'informacion';
+type ActiveView =
+  | null
+  | 'orientacion'
+  | 'programas'
+  | 'testimonios'
+  | 'impacto'
+  | 'vida'
+  | 'informacion';
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
@@ -33,24 +40,13 @@ const Index = () => {
 
   return (
     <div className="w-full h-screen overflow-hidden relative bg-background">
-      {/* 3D Scene */}
-      <Suspense
-        fallback={
-          <div className="w-full h-full flex items-center justify-center bg-background">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-            >
-              <Compass size={32} className="text-primary" />
-            </motion.div>
-          </div>
-        }
-      >
-        <CampusScene
+      {/* 2D Scene */}
+      <div className="w-full h-full flex items-center justify-center bg-background">
+        <ReferenceCampusMap
           onBuildingClick={handleBuildingClick}
           activeBuilding={activeBuilding}
         />
-      </Suspense>
+      </div>
 
       {/* HUD */}
       {!showIntro && !activeView && (
@@ -64,6 +60,7 @@ const Index = () => {
               Campus Virtual
             </h2>
           </div>
+
           <Link
             to="/mapa-referencia"
             aria-label="Ver mapa de referencia en dos dimensiones"

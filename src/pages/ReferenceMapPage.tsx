@@ -21,7 +21,7 @@ export default function ReferenceMapPage() {
           Mapa visual de referencia
         </h1>
         <p className="mt-2 text-muted-foreground max-w-2xl">
-          Mismo layout que el <strong>campus 3D</strong> de la página principal: datos en{' '}
+          Mismo layout que el <strong>campus 2D</strong> de la página principal: datos en{' '}
           <code className="text-xs bg-muted px-1 rounded">src/lib/campusMapLayout.ts</code>. I romana
           a la izquierda; a la derecha, las cinco zonas clicables (Programas, Orientación, etc.).
         </p>
