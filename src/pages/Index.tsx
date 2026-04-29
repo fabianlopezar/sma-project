@@ -9,8 +9,9 @@ import ImpactView from '../components/ImpactView';
 import CampusLifeView from '../components/CampusLifeView';
 import InformacionView from '../components/InfoPanel';
 import ReferenceCampusMap from '../components/ReferenceCampusMap';
+import ExpedicionUAOview from '../components/ExpedicionUAOview';
 import { Link } from 'react-router-dom';
-import { Map } from 'lucide-react';
+import { Map, Gamepad2 } from 'lucide-react';
 
 type ActiveView =
   | null
@@ -19,7 +20,8 @@ type ActiveView =
   | 'testimonios'
   | 'impacto'
   | 'vida'
-  | 'informacion';
+  | 'informacion'
+  | 'expedicion';
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
@@ -33,6 +35,11 @@ const Index = () => {
   const handleAction = (id: string) => {
     setActiveBuilding(null);
     setActiveView(id as ActiveView);
+  };
+
+  const openExpedicion = () => {
+    setActiveBuilding(null);
+    setActiveView('expedicion');
   };
 
   const closePanel = () => setActiveBuilding(null);
@@ -53,12 +60,23 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-5 left-5 right-5 z-40 flex flex-wrap items-center justify-between gap-3 sm:top-6 sm:left-6 sm:right-6"
+          className="fixed top-5 left-5 right-5 z-40 flex items-start justify-between gap-3 sm:top-6 sm:left-6 sm:right-6"
         >
-          <div className="glass-panel rounded-2xl px-4 py-2.5">
-            <h2 className="font-display text-[11px] font-bold text-foreground tracking-[0.18em] uppercase leading-none">
-              Campus Virtual
-            </h2>
+          <div className="flex flex-col items-start gap-2">
+            <div className="glass-panel rounded-2xl px-4 py-2.5">
+              <h2 className="font-display text-[11px] font-bold text-foreground tracking-[0.18em] uppercase leading-none">
+                Campus Virtual
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={openExpedicion}
+              className="glass-panel inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-bold text-primary hover:text-primary-foreground hover:bg-primary hover:border-primary/30 transition-all duration-200"
+            >
+              <Gamepad2 className="size-[15px] shrink-0" strokeWidth={2.25} />
+              Expedición UAO
+            </button>
           </div>
 
           <Link
@@ -115,6 +133,7 @@ const Index = () => {
         {activeView === 'impacto' && <ImpactView onClose={closeView} />}
         {activeView === 'vida' && <CampusLifeView onClose={closeView} />}
         {activeView === 'informacion' && <InformacionView onClose={closeView} />}
+        {activeView === 'expedicion' && <ExpedicionUAOview onClose={closeView} />}
       </AnimatePresence>
 
       {/* Intro */}

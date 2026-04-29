@@ -26,8 +26,6 @@ export default function ReferenceMapPage() {
           a la izquierda; a la derecha, las cinco zonas clicables (Programas, Orientación, etc.).
         </p>
       </div>
-
-      <ReferenceCampusMap />
     </div>
   );
 }
