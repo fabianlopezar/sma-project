@@ -27,8 +27,17 @@ type Character = {
   id: CharacterId;
   name: string;
   image: string;
+  dialogueImage: string;
+  chibi: string;
+  thinkingImage: string;
+  closingImage: string;
   description: string;
-  introDialogue: string;
+  stateLabel: string;
+  closingLabel: string;
+  accentBg: string;
+  accentText: string;
+  accentSoft: string;
+  ring: string;
 };
 
 type Activity = {
@@ -40,6 +49,8 @@ type Activity = {
   options: string[];
   correct: string;
   reward: number;
+  clarityReward: number;
+  distortionReduction: number;
 };
 
 type Zone = {
@@ -61,17 +72,95 @@ const characters: Character[] = [
   {
     id: 'valeria',
     name: 'Valeria',
-    image: '/img/personajes/valeria.png',
-    description: 'Ideal para una experiencia más sensible, narrativa y de descubrimiento.',
-    introDialogue:
-      'Te acompañaré en este recorrido para descubrir mejor este espacio y todo lo que tiene para ofrecer.',
+    image: '/img/personajes/Valeria-1.png',
+    dialogueImage: '/img/personajes/Valeria-2.png',
+    chibi: '/img/personajes/Valeria-Chibi.png',
+    thinkingImage: '/img/personajes/Valeria-Ex-4.png',
+    closingImage: '/img/personajes/Valeria-Ex-1.png',
+    description: 'Ideal para una experiencia más sensible, visual y de descubrimiento.',
+    stateLabel: 'Curiosidad activa',
+    closingLabel: 'Ideas conectadas',
+    accentBg: 'bg-emerald-700',
+    accentText: 'text-emerald-700',
+    accentSoft: 'bg-emerald-100 text-emerald-700',
+    ring: 'ring-emerald-700 border-emerald-700 bg-emerald-50',
   },
   {
     id: 'mateo',
     name: 'Mateo',
-    image: '/img/personajes/mateo.png',
+    image: '/img/personajes/Mateo-1.png',
+    dialogueImage: '/img/personajes/Mateo-2.png',
+    chibi: '/img/personajes/Mateo-Chibi.png',
+    thinkingImage: '/img/personajes/Mateo-Ex-3.png',
+    closingImage: '/img/personajes/Mateo-Ex-1.png',
     description: 'Ideal para una experiencia más práctica, clara y enfocada en exploración.',
-    introDialogue: 'Este lugar parece ideal para comenzar...',
+    stateLabel: 'Ruta activa',
+    closingLabel: 'Objetivos aclarados',
+    accentBg: 'bg-blue-700',
+    accentText: 'text-blue-700',
+    accentSoft: 'bg-blue-100 text-blue-700',
+    ring: 'ring-blue-700 border-blue-700 bg-blue-50',
+  },
+];
+
+const introSlides = [
+  {
+    title: 'Bienvenido a Expedición UAO.',
+    text: 'Este no es solo un mapa del campus.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'Una forma de recorrer.',
+    text: 'Es una forma de interpretarlo y descubrir qué puede significar para ti.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'Tu personaje te acompaña.',
+    text: 'A partir de ahora, tu personaje será la manera en que vas a vivir este recorrido.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'Explora por zonas.',
+    text: 'Sus dudas, decisiones y avances se reflejarán en cada zona que explores.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'Retos y señales.',
+    text: 'Algunos lugares estarán claros desde el inicio. Otros tendrán señales, retos o distorsiones que deberás comprender para avanzar.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'Progreso, claridad y distorsión.',
+    text: 'Cada acción puede aumentar tu progreso, mejorar tu claridad o reducir la distorsión del entorno.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'A tu ritmo.',
+    text: 'No se trata de recorrer rápido, sino de entender el campus a tu manera.',
+    button: 'Iniciar expedición',
+  },
+];
+
+const closingSlides = [
+  {
+    title: 'Has terminado esta sesión.',
+    text: 'Pero tu recorrido por la UAO no termina aquí.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'Tu personaje avanzó.',
+    text: 'Cada zona que exploraste dejó una señal: más claridad, nuevas preguntas y otra forma de mirar el campus.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'El avance parcial también cuenta.',
+    text: 'Tal vez no todo quedó desbloqueado, y eso también hace parte del camino.',
+    button: 'Siguiente',
+  },
+  {
+    title: 'La expedición continúa.',
+    text: 'Vuelve cuando quieras seguir explorando, resolver misiones pendientes o descubrir nuevas rutas.',
+    button: 'Finalizar',
   },
 ];
 
@@ -99,6 +188,8 @@ const zones: Zone[] = [
         options: ['Consulta e investigación', 'Entrenamiento deportivo', 'Producción industrial'],
         correct: 'Consulta e investigación',
         reward: 120,
+        clarityReward: 8,
+        distortionReduction: 6,
       },
       {
         id: 'biblioteca-reto',
@@ -109,6 +200,8 @@ const zones: Zone[] = [
         options: ['Fuentes confiables', 'Uniformes deportivos', 'Menús de cafetería'],
         correct: 'Fuentes confiables',
         reward: 150,
+        clarityReward: 10,
+        distortionReduction: 8,
       },
       {
         id: 'biblioteca-decision',
@@ -123,6 +216,8 @@ const zones: Zone[] = [
         ],
         correct: 'Consultar información antes de decidir',
         reward: 180,
+        clarityReward: 12,
+        distortionReduction: 10,
       },
     ],
   },
@@ -148,6 +243,8 @@ const zones: Zone[] = [
         options: ['Experimentación práctica', 'Solo teoría escrita', 'Trámites administrativos'],
         correct: 'Experimentación práctica',
         reward: 130,
+        clarityReward: 8,
+        distortionReduction: 7,
       },
       {
         id: 'laboratorios-reto',
@@ -158,6 +255,8 @@ const zones: Zone[] = [
         options: ['Prototipos y pruebas', 'Solamente reuniones sociales', 'Únicamente matrículas'],
         correct: 'Prototipos y pruebas',
         reward: 170,
+        clarityReward: 11,
+        distortionReduction: 9,
       },
       {
         id: 'laboratorios-decision',
@@ -168,6 +267,8 @@ const zones: Zone[] = [
         options: ['Probar, observar y corregir', 'No participar', 'Evitar preguntar'],
         correct: 'Probar, observar y corregir',
         reward: 190,
+        clarityReward: 13,
+        distortionReduction: 11,
       },
     ],
   },
@@ -193,6 +294,8 @@ const zones: Zone[] = [
         options: ['Encuentro y comunidad', 'Aislamiento académico', 'Zona restringida'],
         correct: 'Encuentro y comunidad',
         reward: 110,
+        clarityReward: 7,
+        distortionReduction: 6,
       },
       {
         id: 'plazoleta-reto',
@@ -207,6 +310,8 @@ const zones: Zone[] = [
         ],
         correct: 'Conversaciones, descanso y actividades',
         reward: 140,
+        clarityReward: 9,
+        distortionReduction: 7,
       },
       {
         id: 'plazoleta-decision',
@@ -217,6 +322,8 @@ const zones: Zone[] = [
         options: ['Participar y conectar con otros', 'Evitar todo contacto', 'No explorar el campus'],
         correct: 'Participar y conectar con otros',
         reward: 170,
+        clarityReward: 11,
+        distortionReduction: 9,
       },
     ],
   },
@@ -242,6 +349,8 @@ const zones: Zone[] = [
         options: ['Proyectos que transforman el entorno', 'Solo horarios', 'Publicidad sin contexto'],
         correct: 'Proyectos que transforman el entorno',
         reward: 130,
+        clarityReward: 8,
+        distortionReduction: 7,
       },
       {
         id: 'impacto-reto',
@@ -252,6 +361,8 @@ const zones: Zone[] = [
         options: ['Soluciones para la comunidad', 'No compartir conocimiento', 'Evitar proyectos'],
         correct: 'Soluciones para la comunidad',
         reward: 170,
+        clarityReward: 11,
+        distortionReduction: 9,
       },
       {
         id: 'impacto-decision',
@@ -262,6 +373,8 @@ const zones: Zone[] = [
         options: ['Participar en proyectos útiles', 'Ignorar problemas reales', 'No colaborar'],
         correct: 'Participar en proyectos útiles',
         reward: 200,
+        clarityReward: 14,
+        distortionReduction: 12,
       },
     ],
   },
@@ -288,6 +401,8 @@ const zones: Zone[] = [
         options: ['Cuidado ambiental', 'Producción audiovisual', 'Derecho comercial'],
         correct: 'Cuidado ambiental',
         reward: 130,
+        clarityReward: 8,
+        distortionReduction: 7,
       },
       {
         id: 'sostenibilidad-reto',
@@ -298,6 +413,8 @@ const zones: Zone[] = [
         options: ['Cuidar recursos y reducir impactos', 'Desperdiciar agua', 'Ignorar residuos'],
         correct: 'Cuidar recursos y reducir impactos',
         reward: 180,
+        clarityReward: 12,
+        distortionReduction: 10,
       },
       {
         id: 'sostenibilidad-decision',
@@ -308,6 +425,8 @@ const zones: Zone[] = [
         options: ['Usar bien los recursos', 'Dañar zonas verdes', 'No separar residuos'],
         correct: 'Usar bien los recursos',
         reward: 210,
+        clarityReward: 14,
+        distortionReduction: 12,
       },
     ],
   },
@@ -348,6 +467,7 @@ function getZoneCompletion(zone: Zone, completedActivities: string[]) {
 export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [showIntroDialogue, setShowIntroDialogue] = useState(false);
+  const [showClosingDialogue, setShowClosingDialogue] = useState(false);
   const [activeZone, setActiveZone] = useState<Zone | null>(null);
   const [activeActivity, setActiveActivity] = useState<{
     zone: Zone;
@@ -355,6 +475,8 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
   } | null>(null);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [xp, setXp] = useState(0);
+  const [clarity, setClarity] = useState(0);
+  const [distortion, setDistortion] = useState(100);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const level = Math.floor(xp / 600) + 1;
@@ -367,6 +489,20 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
     (zone) => getZoneCompletion(zone, completedActivities).isCompleted
   ).length;
 
+  const totalActivities = zones.reduce((acc, zone) => acc + zone.activities.length, 0);
+
+  const requestClose = () => {
+    if (selectedCharacter && !showIntroDialogue) {
+      setShowClosingDialogue(true);
+      setActiveZone(null);
+      setActiveActivity(null);
+      setFeedback(null);
+      return;
+    }
+
+    onClose();
+  };
+
   const answerActivity = (zone: Zone, activity: Activity, option: string) => {
     if (option !== activity.correct) {
       setFeedback('Intenta nuevamente. Observa la zona y revisa la pista antes de responder.');
@@ -378,6 +514,8 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
 
     if (!alreadyCompleted) {
       setXp((prev) => prev + activity.reward);
+      setClarity((prev) => Math.min(prev + activity.clarityReward, 100));
+      setDistortion((prev) => Math.max(prev - activity.distortionReduction, 0));
       setCompletedActivities((prev) => [...prev, key]);
       setFeedback(`¡Correcto! Ganaste ${activity.reward} XP.`);
       return;
@@ -399,7 +537,10 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
           onSelect={(character) => {
             setSelectedCharacter(character);
             setShowIntroDialogue(true);
+            setShowClosingDialogue(false);
             setXp(0);
+            setClarity(0);
+            setDistortion(100);
             setCompletedActivities([]);
             setActiveZone(null);
             setActiveActivity(null);
@@ -407,9 +548,31 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
           }}
         />
       ) : showIntroDialogue ? (
-        <InitialDialogueScreen
+        <DialogueScreen
+          mode="intro"
           character={selectedCharacter}
+          level={level}
+          xp={xp}
+          clarity={clarity}
+          distortion={distortion}
+          completedZones={completedZones}
+          completedActivities={completedActivities.length}
+          totalActivities={totalActivities}
           onContinue={() => setShowIntroDialogue(false)}
+          onClose={onClose}
+        />
+      ) : showClosingDialogue ? (
+        <DialogueScreen
+          mode="closing"
+          character={selectedCharacter}
+          level={level}
+          xp={xp}
+          clarity={clarity}
+          distortion={distortion}
+          completedZones={completedZones}
+          completedActivities={completedActivities.length}
+          totalActivities={totalActivities}
+          onContinue={() => setShowClosingDialogue(false)}
           onClose={onClose}
         />
       ) : (
@@ -428,7 +591,9 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
             level={level}
             progress={progress}
             progressText={progressText}
-            onClose={onClose}
+            clarity={clarity}
+            distortion={distortion}
+            onClose={requestClose}
           />
 
           <CategoryBar />
@@ -478,7 +643,12 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
             })}
           </div>
 
-          <BottomActions completed={completedZones} total={zones.length} />
+          <BottomActions
+            completed={completedZones}
+            total={zones.length}
+            clarity={clarity}
+            distortion={distortion}
+          />
 
           <AnimatePresence>
             {activeZone && (
@@ -498,6 +668,7 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
           <AnimatePresence>
             {activeActivity && (
               <ActivityModal
+                character={selectedCharacter}
                 zone={activeActivity.zone}
                 activity={activeActivity.activity}
                 feedback={feedback}
@@ -554,7 +725,7 @@ function CharacterSelection({
       </button>
 
       <motion.div
-        className="relative z-10 max-h-[88vh] w-[min(94vw,760px)] overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl sm:p-6"
+        className="relative z-10 max-h-[88vh] w-[min(94vw,820px)] overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl sm:p-6"
         initial={{ scale: 0.96, y: 16, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
       >
@@ -562,7 +733,7 @@ function CharacterSelection({
           Selecciona tu personaje
         </h2>
         <p className="mt-1 text-center text-xs text-slate-500 sm:text-sm">
-          Ambos personajes inician en nivel 1.
+          Ambos personajes inician en nivel 1. El recorrido se adapta visualmente a tu elección.
         </p>
 
         <div className="mt-5 grid gap-3 sm:mt-6 md:grid-cols-2">
@@ -576,7 +747,7 @@ function CharacterSelection({
                 onClick={() => setSelected(character)}
                 className={`rounded-2xl border p-4 text-left transition hover:shadow-md sm:p-5 ${
                   isSelected
-                    ? 'border-emerald-700 bg-emerald-50 ring-2 ring-emerald-700'
+                    ? `${character.ring} ring-2`
                     : 'border-slate-200 bg-white'
                 }`}
               >
@@ -584,14 +755,20 @@ function CharacterSelection({
                   <img
                     src={character.image}
                     alt={character.name}
-                    className="h-24 object-contain sm:h-32 md:h-36"
+                    className="h-32 object-contain sm:h-44 md:h-52"
                     draggable={false}
                   />
                 </div>
 
-                <h3 className="mt-3 text-lg font-black text-slate-900 sm:text-xl">
-                  {character.name}
-                </h3>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-black text-slate-900 sm:text-xl">
+                    {character.name}
+                  </h3>
+
+                  <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${character.accentSoft}`}>
+                    {character.stateLabel}
+                  </span>
+                </div>
 
                 <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
                   {character.description}
@@ -608,7 +785,7 @@ function CharacterSelection({
             onClick={() => selected && onSelect(selected)}
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-black shadow-md transition sm:px-5 sm:text-sm ${
               selected
-                ? 'bg-emerald-700 text-white hover:bg-emerald-800'
+                ? `${selected.accentBg} text-white hover:brightness-95`
                 : 'cursor-not-allowed bg-slate-200 text-slate-400'
             }`}
           >
@@ -621,15 +798,46 @@ function CharacterSelection({
   );
 }
 
-function InitialDialogueScreen({
+function DialogueScreen({
+  mode,
   character,
+  level,
+  xp,
+  clarity,
+  distortion,
+  completedZones,
+  completedActivities,
+  totalActivities,
   onContinue,
   onClose,
 }: {
+  mode: 'intro' | 'closing';
   character: Character;
+  level: number;
+  xp: number;
+  clarity: number;
+  distortion: number;
+  completedZones: number;
+  completedActivities: number;
+  totalActivities: number;
   onContinue: () => void;
   onClose: () => void;
 }) {
+  const [step, setStep] = useState(0);
+  const slides = mode === 'intro' ? introSlides : closingSlides;
+  const current = slides[step];
+  const isLast = step === slides.length - 1;
+  const image = mode === 'intro' ? character.dialogueImage : character.closingImage;
+
+  const next = () => {
+    if (isLast) {
+      onContinue();
+      return;
+    }
+
+    setStep((prev) => prev + 1);
+  };
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-slate-100">
       <img
@@ -650,54 +858,99 @@ function InitialDialogueScreen({
         onClick={onClose}
         className="absolute right-4 top-4 z-20 rounded-full bg-white/90 px-3 py-2 text-[11px] font-black text-slate-700 shadow-md transition hover:bg-white sm:right-6 sm:top-5 sm:px-4 sm:text-xs md:right-8 md:top-6"
       >
-        Volver
+        Salir
       </button>
 
-      {/* Personaje */}
-      <div className="pointer-events-none absolute bottom-0 left-0 z-10 flex h-[44vh] w-full items-end sm:h-[58vh] md:h-[66vh] lg:h-[72vh]">
+      <div className="pointer-events-none absolute bottom-0 left-0 z-10 flex h-[44vh] w-full items-end sm:h-[58vh] md:h-[66vh] lg:h-[74vh]">
         <img
-          src={character.image}
+          src={image}
           alt={character.name}
           className="ml-0 max-h-full w-auto object-contain sm:ml-4 md:ml-8 lg:ml-12"
           draggable={false}
         />
       </div>
 
-      {/* Caja de diálogo */}
       <motion.div
+        key={`${mode}-${step}`}
         className="
           absolute z-20 rounded-3xl bg-white shadow-2xl
-          left-1/2 bottom-5 w-[min(90vw,620px)] -translate-x-1/2
-          max-h-[38vh] overflow-y-auto px-5 py-5
-          sm:bottom-8 sm:w-[min(82vw,640px)] sm:px-6 sm:py-6
-          md:left-[58%] md:bottom-10 md:w-[min(58vw,640px)]
-          lg:left-[60%] lg:w-[min(52vw,680px)]
+          left-1/2 bottom-5 w-[min(90vw,650px)] -translate-x-1/2
+          max-h-[48vh] overflow-y-auto px-5 py-5
+          sm:bottom-8 sm:w-[min(82vw,680px)] sm:px-6 sm:py-6
+          md:left-[58%] md:bottom-10 md:w-[min(58vw,680px)]
+          lg:left-[60%] lg:w-[min(52vw,700px)]
         "
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25 }}
       >
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${character.accentSoft}`}>
+            {mode === 'intro' ? character.stateLabel : character.closingLabel}
+          </span>
+
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase text-slate-600">
+            {step + 1}/{slides.length}
+          </span>
+        </div>
+
         <h2 className="text-base font-black text-slate-900 sm:text-lg md:text-xl">
-          {character.name}
+          {current.title}
         </h2>
 
         <p className="mt-2 pr-12 text-xs font-medium leading-relaxed text-slate-700 sm:text-sm md:text-base">
-          {character.introDialogue}
+          {current.text}
         </p>
+
+        {mode === 'closing' && (
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+            <ProgressChip label="Nivel" value={`${level}`} />
+            <ProgressChip label="XP" value={`${xp}`} />
+            <ProgressChip label="Claridad" value={`${clarity}%`} />
+            <ProgressChip label="Distorsión" value={`${distortion}%`} />
+            <div className="col-span-2 rounded-2xl bg-slate-50 px-3 py-2 font-bold text-slate-600 sm:col-span-4">
+              Actividades: {completedActivities}/{totalActivities} · Zonas: {completedZones}/{zones.length}
+            </div>
+          </div>
+        )}
 
         <button
           type="button"
-          onClick={onContinue}
-          aria-label="Continuar"
-          className="
-            absolute bottom-4 right-4 flex items-center justify-center rounded-full
-            bg-emerald-700 text-white shadow-md transition hover:scale-105 hover:bg-emerald-800
-            h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12
-          "
+          onClick={next}
+          aria-label={current.button}
+          className={`absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md transition hover:scale-105 hover:brightness-95 sm:h-11 sm:w-11 md:h-12 md:w-12 ${character.accentBg}`}
         >
           <ArrowLeft className="rotate-180" size={22} strokeWidth={3} />
         </button>
+
+        <div className="mt-5 flex items-center justify-between gap-3 pr-12">
+          <button
+            type="button"
+            onClick={() => setStep((prev) => Math.max(prev - 1, 0))}
+            disabled={step === 0}
+            className="rounded-full bg-slate-100 px-3 py-2 text-[11px] font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Anterior
+          </button>
+
+          <button
+            type="button"
+            onClick={next}
+            className={`rounded-full px-4 py-2 text-[11px] font-black text-white shadow-md transition hover:brightness-95 ${character.accentBg}`}
+          >
+            {current.button}
+          </button>
+        </div>
       </motion.div>
+    </div>
+  );
+}
+
+function ProgressChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 px-3 py-2">
+      <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
+      <p className="text-sm font-black text-slate-800">{value}</p>
     </div>
   );
 }
@@ -707,28 +960,38 @@ function TopHud({
   level,
   progress,
   progressText,
+  clarity,
+  distortion,
   onClose,
 }: {
   character: Character;
   level: number;
   progress: number;
   progressText: string;
+  clarity: number;
+  distortion: number;
   onClose: () => void;
 }) {
   return (
     <div className="absolute left-3 right-3 top-3 z-30 rounded-2xl bg-emerald-100/85 px-3 py-2 shadow-lg backdrop-blur-md sm:left-4 sm:right-4 sm:top-4 sm:rounded-[28px] sm:px-5 sm:py-3">
       <div className="flex items-center gap-2 sm:gap-4">
         <img
-          src={character.image}
+          src={character.chibi}
           alt={character.name}
           className="h-11 w-11 rounded-full bg-white object-contain p-1 shadow-md sm:h-14 sm:w-14 md:h-20 md:w-20"
           draggable={false}
         />
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-black leading-none text-slate-900 sm:text-2xl md:text-3xl">
-            {character.name}
-          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="truncate text-lg font-black leading-none text-slate-900 sm:text-2xl md:text-3xl">
+              {character.name}
+            </h1>
+
+            <span className={`hidden rounded-full px-3 py-1 text-[10px] font-black uppercase sm:inline-flex ${character.accentSoft}`}>
+              {character.stateLabel}
+            </span>
+          </div>
 
           <p className="mt-1 text-[11px] font-semibold text-slate-700 sm:text-xs md:text-sm">
             Nivel {level} | {progressText} XP
@@ -740,6 +1003,15 @@ function TopHud({
               style={{ width: `${progress}%` }}
             />
           </div>
+
+          <p className="mt-1 text-[10px] font-bold text-slate-700 sm:hidden">
+            Claridad {clarity}% · Distorsión {distortion}%
+          </p>
+        </div>
+
+        <div className="hidden min-w-[180px] grid-cols-2 gap-2 md:grid">
+          <MiniMetric label="Claridad" value={clarity} positive />
+          <MiniMetric label="Distorsión" value={distortion} />
         </div>
 
         <button
@@ -750,6 +1022,32 @@ function TopHud({
           <ArrowLeft size={14} />
           <span className="hidden sm:inline">Volver</span>
         </button>
+      </div>
+    </div>
+  );
+}
+
+function MiniMetric({
+  label,
+  value,
+  positive,
+}: {
+  label: string;
+  value: number;
+  positive?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl bg-white/70 px-3 py-2">
+      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] font-black uppercase text-slate-500">
+        <span>{label}</span>
+        <span>{value}%</span>
+      </div>
+
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className={`h-full rounded-full ${positive ? 'bg-emerald-500' : 'bg-amber-500'}`}
+          style={{ width: `${value}%` }}
+        />
       </div>
     </div>
   );
@@ -802,9 +1100,13 @@ function CategoryBar() {
 function BottomActions({
   completed,
   total,
+  clarity,
+  distortion,
 }: {
   completed: number;
   total: number;
+  clarity: number;
+  distortion: number;
 }) {
   return (
     <div className="absolute bottom-3 left-3 right-3 z-30 flex flex-wrap justify-center gap-2 sm:bottom-5 sm:left-5 sm:right-auto sm:justify-start md:bottom-6 md:left-6">
@@ -815,12 +1117,12 @@ function BottomActions({
 
       <button className="inline-flex items-center gap-1.5 rounded-full bg-sky-950 px-4 py-2.5 text-[11px] font-black text-white shadow-lg sm:text-xs md:text-sm">
         <Info size={14} />
-        Info
+        Claridad {clarity}%
       </button>
 
       <button className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-[11px] font-black text-white shadow-lg sm:text-xs md:text-sm">
         <Route size={14} />
-        Ruta
+        Distorsión {distortion}%
       </button>
     </div>
   );
@@ -955,6 +1257,7 @@ function ZonePanel({
 }
 
 function ActivityModal({
+  character,
   zone,
   activity,
   feedback,
@@ -962,6 +1265,7 @@ function ActivityModal({
   onAnswer,
   onClose,
 }: {
+  character: Character;
   zone: Zone;
   activity: Activity;
   feedback: string | null;
@@ -983,7 +1287,7 @@ function ActivityModal({
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="max-h-[88vh] w-[min(94vw,580px)] overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl sm:p-6"
+        className="max-h-[88vh] w-[min(94vw,680px)] overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl sm:p-6"
         initial={{ scale: 0.95, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 16 }}
@@ -1013,30 +1317,43 @@ function ActivityModal({
           </button>
         </div>
 
-        <p className="rounded-2xl bg-slate-50 p-3 text-xs leading-relaxed text-slate-600 sm:p-4 sm:text-sm">
-          {activity.description}
-        </p>
+        <div className="grid gap-4 md:grid-cols-[1fr_150px]">
+          <div>
+            <p className="rounded-2xl bg-slate-50 p-3 text-xs leading-relaxed text-slate-600 sm:p-4 sm:text-sm">
+              {activity.description}
+            </p>
 
-        <p className="mt-5 text-sm font-bold text-slate-700 sm:text-base">
-          {activity.question}
-        </p>
+            <p className="mt-5 text-sm font-bold text-slate-700 sm:text-base">
+              {activity.question}
+            </p>
 
-        <div className="mt-4 grid gap-2.5 sm:gap-3">
-          {activity.options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              disabled={completed}
-              onClick={() => onAnswer(option)}
-              className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                completed
-                  ? 'cursor-not-allowed border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+            <div className="mt-4 grid gap-2.5 sm:gap-3">
+              {activity.options.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  disabled={completed}
+                  onClick={() => onAnswer(option)}
+                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                    completed
+                      ? 'cursor-not-allowed border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="hidden items-end justify-center rounded-2xl bg-slate-50 md:flex">
+            <img
+              src={character.thinkingImage}
+              alt={`${character.name} pensando`}
+              className="max-h-48 object-contain"
+              draggable={false}
+            />
+          </div>
         </div>
 
         {completed && !feedback && (
@@ -1059,7 +1376,7 @@ function ActivityModal({
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs font-semibold text-slate-500">
-            Recompensa: {activity.reward} XP
+            Recompensa: {activity.reward} XP · +{activity.clarityReward}% claridad · -{activity.distortionReduction}% distorsión
           </p>
 
           <button
