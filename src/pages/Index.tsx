@@ -1,5 +1,9 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Compass, Map, Gamepad2 } from 'lucide-react';
+
+import CampusScene from '../components/CampusScene';
 import BuildingPanel from '../components/BuildingPanel';
 import IntroOverlay from '../components/IntroOverlay';
 import VocationalQuiz from '../components/VocationalQuiz';
@@ -8,10 +12,7 @@ import TestimonialsView from '../components/TestimonialsView';
 import ImpactView from '../components/ImpactView';
 import CampusLifeView from '../components/CampusLifeView';
 import InformacionView from '../components/InfoPanel';
-import ReferenceCampusMap from '../components/ReferenceCampusMap';
 import ExpedicionUAOview from '../components/ExpedicionUAOview';
-import { Link } from 'react-router-dom';
-import { Map, Gamepad2 } from 'lucide-react';
 
 type ActiveView =
   | null
@@ -47,13 +48,24 @@ const Index = () => {
 
   return (
     <div className="w-full h-screen overflow-hidden relative bg-background">
-      {/* 2D Scene */}
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <ReferenceCampusMap
+      {/* 3D Scene */}
+      <Suspense
+        fallback={
+          <div className="w-full h-full flex items-center justify-center bg-background">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+            >
+              <Compass size={32} className="text-primary" />
+            </motion.div>
+          </div>
+        }
+      >
+        <CampusScene
           onBuildingClick={handleBuildingClick}
           activeBuilding={activeBuilding}
         />
-      </div>
+      </Suspense>
 
       {/* HUD */}
       {!showIntro && !activeView && (
@@ -127,18 +139,40 @@ const Index = () => {
 
       {/* Full views */}
       <AnimatePresence>
-        {activeView === 'orientacion' && <VocationalQuiz onClose={closeView} />}
-        {activeView === 'programas' && <ProgramsView onClose={closeView} />}
-        {activeView === 'testimonios' && <TestimonialsView onClose={closeView} />}
-        {activeView === 'impacto' && <ImpactView onClose={closeView} />}
-        {activeView === 'vida' && <CampusLifeView onClose={closeView} />}
-        {activeView === 'informacion' && <InformacionView onClose={closeView} />}
-        {activeView === 'expedicion' && <ExpedicionUAOview onClose={closeView} />}
+        {activeView === 'orientacion' && (
+          <VocationalQuiz onClose={closeView} />
+        )}
+
+        {activeView === 'programas' && (
+          <ProgramsView onClose={closeView} />
+        )}
+
+        {activeView === 'testimonios' && (
+          <TestimonialsView onClose={closeView} />
+        )}
+
+        {activeView === 'impacto' && (
+          <ImpactView onClose={closeView} />
+        )}
+
+        {activeView === 'vida' && (
+          <CampusLifeView onClose={closeView} />
+        )}
+
+        {activeView === 'informacion' && (
+          <InformacionView onClose={closeView} />
+        )}
+
+        {activeView === 'expedicion' && (
+          <ExpedicionUAOview onClose={closeView} />
+        )}
       </AnimatePresence>
 
       {/* Intro */}
       <AnimatePresence>
-        {showIntro && <IntroOverlay onEnter={() => setShowIntro(false)} />}
+        {showIntro && (
+          <IntroOverlay onEnter={() => setShowIntro(false)} />
+        )}
       </AnimatePresence>
     </div>
   );

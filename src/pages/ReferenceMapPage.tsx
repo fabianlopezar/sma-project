@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import ReferenceCampusMap from "@/components/ReferenceCampusMap";
 
 /**
- * Página de demostración del mapa de referencia (bloques absolutos).
+ * Página de demostración del mapa de referencia.
  * Ruta: /mapa-referencia
  */
 export default function ReferenceMapPage() {
@@ -17,15 +17,25 @@ export default function ReferenceMapPage() {
           <ArrowLeft className="size-4" />
           Volver al campus
         </Link>
+
         <h1 className="mt-6 font-display text-3xl md:text-4xl font-bold tracking-tight">
           Mapa visual de referencia
         </h1>
+
         <p className="mt-2 text-muted-foreground max-w-2xl">
-          Mismo layout que el <strong>campus 2D</strong> de la página principal: datos en{' '}
-          <code className="text-xs bg-muted px-1 rounded">src/lib/campusMapLayout.ts</code>. I romana
-          a la izquierda; a la derecha, las cinco zonas clicables (Programas, Orientación, etc.).
+          Mismo layout compartido entre el{" "}
+          <strong>campus 2D</strong> y el{" "}
+          <strong>campus 3D</strong> de la página principal: datos centralizados en{" "}
+          <code className="text-xs bg-muted px-1 rounded">
+            src/lib/campusMapLayout.ts
+          </code>.
+          <br />
+          I romana a la izquierda; a la derecha, las zonas interactivas
+          (Programas, Orientación, Testimonios, Impacto y Vida Universitaria).
         </p>
       </div>
+
+      <ReferenceCampusMap />
     </div>
   );
 }
