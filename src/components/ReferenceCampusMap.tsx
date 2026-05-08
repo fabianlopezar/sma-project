@@ -1,103 +1,151 @@
 import { useState } from "react";
 import { EAST_RECTS, ROMAN_I_RECTS, type MapRectPct } from "@/lib/campusMapLayout";
 
-type MapBlock = {
+type Hotspot = {
   id: string;
   label: string;
+  description: string;
   rect: MapRectPct;
 };
 
-/**
- * Mapa según referencia: fondo claro, bloques negros.
- * Rectángulos definidos en campusMapLayout.ts (misma fuente que el campus 3D).
- */
-export default function ReferenceCampusMap() {
-  const [activeId, setActiveId] = useState<string | null>(null);
+type ReferenceCampusMapProps = {
+  onBuildingClick?: (id: string) => void;
+  activeBuilding?: string | null;
+};
 
-  const blocksLeft: MapBlock[] = [
+/**
+ * Mapa híbrido:
+ * - Mantiene imagen aérea interactiva de andres-dev
+ * - Reutiliza layout centralizado de campusMapLayout.ts del branch main
+ */
+export default function ReferenceCampusMap({
+  onBuildingClick,
+  activeBuilding = null,
+}: ReferenceCampusMapProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const hotspots: Hotspot[] = [
     {
       id: "roman-i-serif-top",
-      label: "I romana — serifa superior (travesaño)",
+      label: "📚 Programas Académicos",
+      description: "Explora nuestra oferta académica.",
       rect: ROMAN_I_RECTS[0],
     },
     {
       id: "roman-i-stem",
-      label: "I romana — astil (columna central)",
+      label: "🧠 Orientación Vocacional",
+      description: "Descubre tu camino profesional.",
       rect: ROMAN_I_RECTS[1],
     },
     {
       id: "roman-i-serif-bottom",
-      label: "I romana — serifa inferior (travesaño)",
+      label: "🎥 Testimonios",
+      description: "Historias reales de estudiantes y egresados.",
       rect: ROMAN_I_RECTS[2],
+    },
+    {
+      id: "east-a",
+      label: "🏛 Impacto Institucional",
+      description: "Conoce proyectos con impacto social.",
+      rect: EAST_RECTS[0],
+    },
+    {
+      id: "east-b",
+      label: "🎓 Vida Universitaria",
+      description: "Experimenta la cultura y comunidad del campus.",
+      rect: EAST_RECTS[1],
     },
   ];
 
-  const blocksEast: MapBlock[] = [
-    { id: "east-a", label: "Este — bloque A (más bajo, centro-abajo)", rect: EAST_RECTS[0] },
-    { id: "east-b", label: "Este — bloque B (segundo peldaño)", rect: EAST_RECTS[1] },
-    { id: "east-c", label: "Este — bloque C (tercer peldaño)", rect: EAST_RECTS[2] },
-    { id: "east-d", label: "Este — bloque D (más alto, esquina superior derecha)", rect: EAST_RECTS[3] },
-    { id: "east-e-square", label: "Este — bloque E (cuadrado, borde derecho)", rect: EAST_RECTS[4] },
-  ];
-
-  const allBlocks = [...blocksLeft, ...blocksEast];
-
-  const blockClass = (b: MapBlock) => `
-    absolute rounded-[3px] bg-[#1a1a1a]
-    transition-[transform,background-color,box-shadow] duration-200 ease-out
-    cursor-pointer shadow-sm
-    hover:bg-primary hover:shadow-md hover:z-10 hover:scale-[1.02]
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:z-10
-    ${activeId === b.id ? "ring-2 ring-primary ring-offset-2 ring-offset-white z-10 bg-primary scale-[1.015]" : ""}
-  `;
+  const currentId = hoveredId ?? activeBuilding;
+  const currentHotspot =
+    hotspots.find((x) => x.id === currentId) ?? null;
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4">
-      <div
-        className="relative w-full min-h-[200px] aspect-video sm:min-h-[260px] bg-white rounded-2xl border border-border overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_-6px_rgba(0,0,0,0.08)]"
-        role="img"
-        aria-label="Mapa esquemático: I romana a la izquierda y bloques en diagonal a la derecha"
-      >
-        {allBlocks.map((b) => (
-          <div
-            key={b.id}
-            id={b.id}
-            title={b.label}
-            className={blockClass(b)}
-            style={{
-              left: `${b.rect.left}%`,
-              top: `${b.rect.top}%`,
-              width: `${b.rect.w}%`,
-              height: `${b.rect.h}%`,
-            }}
-            onMouseEnter={() => setActiveId(b.id)}
-            onMouseLeave={() => setActiveId(null)}
-            onFocus={() => setActiveId(b.id)}
-            onBlur={() => setActiveId(null)}
-            tabIndex={0}
-            data-block={b.id}
+    <div className="w-full h-full flex items-center justify-center px-4 py-6 sm:px-6">
+      <div className="w-full max-w-7xl">
+        <div
+          className="relative w-full aspect-[1776/894] overflow-hidden rounded-[28px] border border-black/10 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_-6px_rgba(0,0,0,0.12)]"
+          role="img"
+          aria-label="Mapa aéreo del campus con zonas interactivas"
+        >
+          {/* Imagen de fondo */}
+          <img
+            src="src/img/mapaUAO.png"
+            alt="Vista aérea del campus"
+            className="absolute inset-0 h-full w-full object-cover"
+            draggable={false}
           />
-        ))}
+
+          {/* Overlay suave */}
+          <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+
+          {/* Hotspots */}
+          {hotspots.map((spot) => {
+            const isHovered = hoveredId === spot.id;
+            const isActive = activeBuilding === spot.id;
+            const isHot = isHovered || isActive;
+
+            return (
+              <button
+                key={spot.id}
+                type="button"
+                aria-label={spot.label}
+                title={spot.label}
+                className={[
+                  "absolute rounded-xl transition-all duration-200 ease-out",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#d71920]",
+                  isHot
+                    ? "border-2 border-[#d71920] bg-[#d71920]/15 shadow-[0_0_0_1px_rgba(255,255,255,0.65),0_8px_24px_rgba(0,0,0,0.22)] scale-[1.01] z-20"
+                    : "border-2 border-white/85 bg-white/5 shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.16)] hover:border-[#d71920] hover:bg-[#d71920]/10 hover:scale-[1.01] z-10",
+                ].join(" ")}
+                style={{
+                  left: `${spot.rect.left}%`,
+                  top: `${spot.rect.top}%`,
+                  width: `${spot.rect.w}%`,
+                  height: `${spot.rect.h}%`,
+                }}
+                onClick={() => onBuildingClick?.(spot.id)}
+                onMouseEnter={() => setHoveredId(spot.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                onFocus={() => setHoveredId(spot.id)}
+                onBlur={() => setHoveredId(null)}
+              >
+                {/* Indicador */}
+                <span
+                  className={[
+                    "absolute -top-2 -left-2 h-4 w-4 rounded-full border-2",
+                    isHot
+                      ? "bg-[#d71920] border-white"
+                      : "bg-white border-[#d71920]",
+                  ].join(" ")}
+                />
+
+                <span className="sr-only">{spot.label}</span>
+              </button>
+            );
+          })}
+
+          {/* Card informativa */}
+          <div className="absolute left-4 bottom-4 sm:left-6 sm:bottom-6 max-w-[340px] rounded-2xl border border-black/10 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+            <p className="text-sm font-bold text-gray-900">
+              {currentHotspot
+                ? currentHotspot.label
+                : "Campus UAO"}
+            </p>
+
+            <p className="mt-1 text-sm leading-relaxed text-gray-700">
+              {currentHotspot
+                ? currentHotspot.description
+                : "Haz clic sobre una zona para abrir su información."}
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Los contornos indican zonas interactivas del campus.
+        </p>
       </div>
-
-      <p className="mt-4 text-center text-sm text-muted-foreground min-h-[1.25rem]">
-        {activeId
-          ? allBlocks.find((x) => x.id === activeId)?.label ?? ""
-          : "Pasa el cursor por un bloque (o Tab) para ver la descripción."}
-      </p>
-
-      <details className="mt-6 text-xs text-muted-foreground max-w-3xl mx-auto">
-        <summary className="cursor-pointer font-medium text-foreground">
-          Lista de bloques (ids)
-        </summary>
-        <ul className="mt-2 space-y-1 font-mono text-[11px] break-all">
-          {allBlocks.map((b) => (
-            <li key={`doc-${b.id}`}>
-              <span className="text-foreground">{b.id}</span> — {b.label}
-            </li>
-          ))}
-        </ul>
-      </details>
     </div>
   );
 }

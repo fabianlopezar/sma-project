@@ -1,5 +1,8 @@
 import { useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Compass, Map, Gamepad2 } from 'lucide-react';
+
 import CampusScene from '../components/CampusScene';
 import BuildingPanel from '../components/BuildingPanel';
 import IntroOverlay from '../components/IntroOverlay';
@@ -8,10 +11,18 @@ import ProgramsView from '../components/ProgramsView';
 import TestimonialsView from '../components/TestimonialsView';
 import ImpactView from '../components/ImpactView';
 import CampusLifeView from '../components/CampusLifeView';
-import { Link } from 'react-router-dom';
-import { Compass, Map } from 'lucide-react';
+import InformacionView from '../components/InfoPanel';
+import ExpedicionUAOview from '../components/ExpedicionUAOview';
 
-type ActiveView = null | 'orientacion' | 'programas' | 'testimonios' | 'impacto' | 'vida';
+type ActiveView =
+  | null
+  | 'orientacion'
+  | 'programas'
+  | 'testimonios'
+  | 'impacto'
+  | 'vida'
+  | 'informacion'
+  | 'expedicion';
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
@@ -25,6 +36,11 @@ const Index = () => {
   const handleAction = (id: string) => {
     setActiveBuilding(null);
     setActiveView(id as ActiveView);
+  };
+
+  const openExpedicion = () => {
+    setActiveBuilding(null);
+    setActiveView('expedicion');
   };
 
   const closePanel = () => setActiveBuilding(null);
@@ -56,13 +72,25 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-5 left-5 right-5 z-40 flex flex-wrap items-center justify-between gap-3 sm:top-6 sm:left-6 sm:right-6"
+          className="fixed top-5 left-5 right-5 z-40 flex items-start justify-between gap-3 sm:top-6 sm:left-6 sm:right-6"
         >
-          <div className="glass-panel rounded-2xl px-4 py-2.5">
-            <h2 className="font-display text-[11px] font-bold text-foreground tracking-[0.18em] uppercase leading-none">
-              Campus Virtual
-            </h2>
+          <div className="flex flex-col items-start gap-2">
+            <div className="glass-panel rounded-2xl px-4 py-2.5">
+              <h2 className="font-display text-[11px] font-bold text-foreground tracking-[0.18em] uppercase leading-none">
+                Campus Virtual
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={openExpedicion}
+              className="glass-panel inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-bold text-primary hover:text-primary-foreground hover:bg-primary hover:border-primary/30 transition-all duration-200"
+            >
+              <Gamepad2 className="size-[15px] shrink-0" strokeWidth={2.25} />
+              Expedición UAO
+            </button>
           </div>
+
           <Link
             to="/mapa-referencia"
             aria-label="Ver mapa de referencia en dos dimensiones"
@@ -88,6 +116,7 @@ const Index = () => {
             { id: 'testimonios', label: '🎥 Testimonios' },
             { id: 'impacto', label: '🏛 Impacto' },
             { id: 'vida', label: '🎓 Campus' },
+            { id: 'informacion', label: 'ℹ️ Información' },
           ].map((item) => (
             <button
               key={item.id}
@@ -110,16 +139,40 @@ const Index = () => {
 
       {/* Full views */}
       <AnimatePresence>
-        {activeView === 'orientacion' && <VocationalQuiz onClose={closeView} />}
-        {activeView === 'programas' && <ProgramsView onClose={closeView} />}
-        {activeView === 'testimonios' && <TestimonialsView onClose={closeView} />}
-        {activeView === 'impacto' && <ImpactView onClose={closeView} />}
-        {activeView === 'vida' && <CampusLifeView onClose={closeView} />}
+        {activeView === 'orientacion' && (
+          <VocationalQuiz onClose={closeView} />
+        )}
+
+        {activeView === 'programas' && (
+          <ProgramsView onClose={closeView} />
+        )}
+
+        {activeView === 'testimonios' && (
+          <TestimonialsView onClose={closeView} />
+        )}
+
+        {activeView === 'impacto' && (
+          <ImpactView onClose={closeView} />
+        )}
+
+        {activeView === 'vida' && (
+          <CampusLifeView onClose={closeView} />
+        )}
+
+        {activeView === 'informacion' && (
+          <InformacionView onClose={closeView} />
+        )}
+
+        {activeView === 'expedicion' && (
+          <ExpedicionUAOview onClose={closeView} />
+        )}
       </AnimatePresence>
 
       {/* Intro */}
       <AnimatePresence>
-        {showIntro && <IntroOverlay onEnter={() => setShowIntro(false)} />}
+        {showIntro && (
+          <IntroOverlay onEnter={() => setShowIntro(false)} />
+        )}
       </AnimatePresence>
     </div>
   );
