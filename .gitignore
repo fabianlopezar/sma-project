@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Unity WebGL build (lo genera cada quien localmente)
+public/unity-build/Build/
+public/unity-build/TemplateData/
+public/unity-build/index.html
+public/unity-build/StreamingAssets/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
