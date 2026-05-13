@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Compass, Map, Gamepad2 } from 'lucide-react';
 
-import CampusScene from '../components/CampusScene';
+import ReferenceCampusMap from '../components/ReferenceCampusMap';
 import BuildingPanel from '../components/BuildingPanel';
 import IntroOverlay from '../components/IntroOverlay';
 import VocationalQuiz from '../components/VocationalQuiz';
@@ -48,7 +48,7 @@ const Index = () => {
 
   return (
     <div className="w-full h-screen overflow-hidden relative bg-background">
-      {/* 3D Scene */}
+      {/* 2D Scene */}
       <Suspense
         fallback={
           <div className="w-full h-full flex items-center justify-center bg-background">
@@ -61,7 +61,7 @@ const Index = () => {
           </div>
         }
       >
-        <CampusScene
+        <ReferenceCampusMap
           onBuildingClick={handleBuildingClick}
           activeBuilding={activeBuilding}
         />
