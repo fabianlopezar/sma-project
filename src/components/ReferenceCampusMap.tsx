@@ -1,4 +1,5 @@
 import { useState } from "react";
+import mapaUAOImg from "@/img/mapaUAO.png";
 
 type CampusHotspot = {
   id: string;
@@ -90,7 +91,7 @@ export default function ReferenceCampusMap({
           aria-label="Mapa 2D interactivo del campus UAO"
         >
           <img
-            src="src/img/mapaUAO.png"
+            src={mapaUAOImg}
             alt="Mapa aéreo del campus UAO"
             className="absolute inset-0 h-full w-full object-cover"
             draggable={false}
