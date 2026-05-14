@@ -12,11 +12,14 @@ dist
 dist-ssr
 *.local
 
-# Unity WebGL build (lo genera cada quien localmente)
-public/unity-build/Build/
-public/unity-build/TemplateData/
-public/unity-build/index.html
-public/unity-build/StreamingAssets/
+# Unity WebGL build
+# Por ahora (entrega academica) se commitea el build para que el deploy lo tenga.
+# A futuro, cuando movamos el build a un CDN (opcion C), se vuelven a ignorar
+# estas carpetas descomentando las lineas de abajo.
+# public/unity-build/Build/
+# public/unity-build/TemplateData/
+# public/unity-build/index.html
+# public/unity-build/StreamingAssets/
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +31,5 @@ public/unity-build/StreamingAssets/
 *.njsproj
 *.sln
 *.sw?
+# Carpeta donde Unity escupe los builds crudos (no se sube al repo)
+unity-builds/

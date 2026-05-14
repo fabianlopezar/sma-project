@@ -4,16 +4,12 @@ import UnityGame, { type UnityResultPayload } from "@/components/UnityGame";
 
 /**
  * Pagina de prueba de integracion Unity <-> React.
-<<<<<<< Updated upstream
- * Ruta: /minijuego
-=======
  *
  * Ruta: /minijuego
  *
  * Funciona aun antes de tener el build de Unity: si no hay archivos en
- * public/unity-build, Unity mostrara un error de carga y los botones
+ * public/unity-build, UnityGame muestra un mensaje claro y los botones
  * simplemente no haran nada, pero el resto de la UI sigue funcional.
->>>>>>> Stashed changes
  */
 const MiniGamePage = () => {
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -27,7 +23,6 @@ const MiniGamePage = () => {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0b1020", color: "white", padding: 24 }}>
-<<<<<<< Updated upstream
       {/* Marcador de "ruta funciona" - si ves esto la ruta esta cargando bien */}
       <div
         style={{
@@ -44,8 +39,6 @@ const MiniGamePage = () => {
         ✓ Ruta /minijuego cargada correctamente
       </div>
 
-=======
->>>>>>> Stashed changes
       <header style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
         <Link to="/" style={{ color: "#9ad", textDecoration: "underline" }}>
           ← Volver
@@ -112,10 +105,7 @@ const MiniGamePage = () => {
       >
         {activeGame ? (
           <UnityGame
-<<<<<<< Updated upstream
-=======
             // remontar cuando cambia el juego
->>>>>>> Stashed changes
             key={activeGame}
             gameId={activeGame}
             onReady={() => console.log("[Unity] listo")}
@@ -141,11 +131,7 @@ const MiniGamePage = () => {
 
       <p style={{ marginTop: 16, color: "#9ab", fontSize: 13 }}>
         Coloca el build WebGL de Unity en <code>public/unity-build/</code>. Ver{" "}
-<<<<<<< Updated upstream
         <code>docs-unity/INTEGRACION.md</code>.
-=======
-        <code>public/unity-build/README.txt</code>.
->>>>>>> Stashed changes
       </p>
     </div>
   );
