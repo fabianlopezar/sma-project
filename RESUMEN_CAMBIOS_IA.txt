@@ -1,0 +1,219 @@
+RESUMEN DE CAMBIOS REALIZADOS EN SMA PROJECT
+Fecha de referencia: 2026-05-15
+
+Objetivo general reciente
+-------------------------
+El proyecto web SMA se esta enfocando principalmente en la experiencia
+"Expedicion WoW / Expedicion UAO". Las demas secciones quedan como
+funciones secundarias para revisar despues.
+
+
+1. Enfoque principal en Expedicion WoW
+-------------------------------------
+- La pantalla inicial ahora lleva directamente a la experiencia de Expedicion
+  despues del intro.
+- Se redujo la importancia visual de las demas secciones.
+- Se dejo un menu hamburguesa secundario con tres accesos:
+  - Mapa 2D
+  - Programas
+  - Informacion
+- La intencion actual es que toda la experiencia multimedia principal gire
+  alrededor del mapa interactivo de Expedicion.
+
+Archivo principal modificado:
+- src/pages/Index.tsx
+
+
+2. Reorganizacion visual del mapa de Expedicion
+-----------------------------------------------
+- Antes el mapa funcionaba como fondo completo y la interfaz del personaje
+  tapaba demasiado contenido.
+- Ahora el mapa se muestra como un lienzo centrado dentro de la pantalla.
+- La interfaz/HUD del personaje se hizo mas compacta.
+- Los indicadores inferiores de progreso, claridad y distorsion se mantienen.
+- El mapa deja espacio visual para pines y paneles.
+
+Archivo principal modificado:
+- src/components/ExpedicionUAOview.tsx
+
+
+3. Pines nuevos sobre el mapa
+-----------------------------
+- Se agregaron pines SVG desde la carpeta:
+  public/img/pines/
+- Los pines se renderizan como imagenes reales, no como circulos CSS.
+- Se posicionaron siguiendo la imagen de referencia entregada por el usuario.
+- Actualmente existen 16 zonas/pines en Expedicion:
+  - Biblioteca
+  - Laboratorios
+  - Plazoleta Central / Cafeteria
+  - Campus Sostenible
+  - Impacto UAO
+  - Porteria Oeste
+  - Porteria Norte
+  - Porteria Sur
+  - Porteria Este
+  - Auditorio
+  - Aulas Sur
+  - Aulas Oriente
+  - Aulas Norte
+  - Zona Verde Sur
+  - PTAR
+  - Gimnasio
+
+Assets usados:
+- public/img/pines/Icono_Auditorio.svg
+- public/img/pines/Icono_Aulas.svg
+- public/img/pines/Icono_Biblioteca.svg
+- public/img/pines/Icono_Cafe.svg
+- public/img/pines/Icono_Gym.svg
+- public/img/pines/Icono_Lab.svg
+- public/img/pines/Icono_Porteria.svg
+- public/img/pines/Icono_PTAR.svg
+- public/img/pines/Icono_ZonaVerde.svg
+
+Nota:
+- Las coordenadas de los pines estan en porcentajes left/top dentro del mapa.
+- Para mover un pin, editar left/top en el arreglo zones dentro de:
+  src/components/ExpedicionUAOview.tsx
+
+
+4. Flujo especial para tres zonas con Unity
+-------------------------------------------
+Se preparo un comportamiento especial SOLO para:
+- Biblioteca
+- Laboratorios
+- Plazoleta Central / Cafeteria
+
+Flujo implementado:
+1. Usuario presiona el pin.
+2. Se abre el panel de informacion de la zona.
+3. Antes de las actividades aparece un bloque "Reto Unity".
+4. El boton "Iniciar reto" abre Unity en un modal encima del mapa.
+5. Las actividades de descubrimiento estan bloqueadas mientras no se complete
+   el reto.
+6. Cuando Unity emite GameOver, la zona se desbloquea.
+7. Al desbloquearse, las actividades quedan disponibles.
+
+Boton temporal:
+- Se agrego un boton "Completar prueba" dentro del modal Unity.
+- Sirve para validar el desbloqueo mientras el build Unity final no este listo.
+- Este boton debe eliminarse o esconderse cuando Unity ya dispare GameOver
+  correctamente desde sus minijuegos reales.
+
+Archivo principal modificado:
+- src/components/ExpedicionUAOview.tsx
+
+
+5. Integracion Unity actual
+---------------------------
+- El componente usado para cargar Unity es:
+  src/components/UnityGame.tsx
+- El build WebGL actual vive en:
+  public/unity-build/Build/
+- Por ahora las tres zonas especiales usan temporalmente:
+  gameId = "cafeteria"
+- Esto se hizo porque el build anterior parece tener ese flujo disponible.
+
+Pendiente futuro:
+- Cambiar los gameId temporales por IDs reales cuando Unity tenga las fases:
+  - biblioteca
+  - laboratorios
+  - cafeteria
+- Confirmar que Unity emita GameOver correctamente.
+- Conectar score/xp reales si Unity los envia.
+
+
+6. Cambios de lint/configuracion
+--------------------------------
+Se corrigieron errores que impedian que npm run lint terminara sin errores:
+- src/components/ui/command.tsx
+  - Se cambio una interface vacia por un type alias.
+- src/components/ui/textarea.tsx
+  - Se cambio una interface vacia por un type alias.
+- tailwind.config.ts
+  - Se reemplazo require("tailwindcss-animate") por import ESM.
+
+Estado actual de lint:
+- npm run lint pasa sin errores.
+- Todavia quedan warnings de react-refresh/only-export-components en
+  componentes generados tipo shadcn, pero no bloquean.
+
+
+7. Validaciones ejecutadas
+--------------------------
+Se validaron los cambios con:
+- npm run lint
+- npm test
+- npm run build
+
+Resultado:
+- Lint: sin errores, solo warnings existentes.
+- Tests: pasan.
+- Build: pasa.
+
+Advertencias no bloqueantes:
+- Vite muestra advertencia de bundle mayor a 500 kB.
+- Browserslist/caniuse-lite aparece desactualizado.
+
+
+8. Estado visual probado
+------------------------
+Se reviso la app localmente en:
+- http://127.0.0.1:8080
+
+Pruebas visuales realizadas:
+- La Expedicion abre correctamente.
+- Los pines aparecen sobre el mapa con los SVG nuevos.
+- El pin Biblioteca abre panel.
+- Biblioteca muestra boton "Iniciar reto".
+- El modal Unity abre encima del mapa.
+- El boton temporal "Completar prueba" desbloquea las actividades.
+
+
+9. Archivos relevantes para continuar
+-------------------------------------
+Entrada/routing:
+- src/pages/Index.tsx
+
+Experiencia principal:
+- src/components/ExpedicionUAOview.tsx
+
+Unity:
+- src/components/UnityGame.tsx
+- docs-unity/GameManager.cs
+- docs-unity/ReactBridge.jslib
+- public/unity-build/Build/
+
+Assets:
+- public/img/mapaUAO.png
+- public/img/pines/
+- public/img/personajes/
+
+Menu secundario:
+- src/components/HamburgerMenu.tsx
+
+
+10. Recomendaciones para la siguiente IA/persona
+------------------------------------------------
+Prioridad recomendada:
+1. Revisar visualmente posiciones de pines si cambia la imagen del mapa.
+2. Definir gameId real para Biblioteca, Laboratorios y Cafeteria.
+3. Quitar o condicionar el boton temporal "Completar prueba".
+4. Confirmar contrato Unity -> React:
+   - evento GameReady
+   - evento GameOver
+   - parametros opcionales: gameId, score, xp
+5. Persistir progreso/desbloqueos si se necesita que sobrevivan al refresh.
+6. Corregir textos con mojibake si vuelven a aparecer en archivos fuente.
+
+
+Notas de cuidado
+----------------
+- Hay cambios locales previos relacionados con Unity:
+  docs-unity/GameManager.cs
+  docs-unity/ReactBridge.jslib
+- No revertir cambios locales sin revisar.
+- El proyecto tenia archivos sin confirmar antes de estos cambios.
+- Mantener el trabajo centrado en Expedicion WoW salvo que el usuario indique
+  otra prioridad.

@@ -16,6 +16,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
+import UnityGame, { type UnityResultPayload } from './UnityGame';
 
 type ExpedicionUAOViewProps = {
   onClose: () => void;
@@ -53,6 +54,13 @@ type Activity = {
   distortionReduction: number;
 };
 
+type ExtraInfo = {
+  /** Titulo del panel informativo extra. Ej: "Sabias que..." */
+  title: string;
+  /** Lista de hechos / curiosidades sobre el lugar. */
+  bullets: string[];
+};
+
 type Zone = {
   id: string;
   title: string;
@@ -62,10 +70,19 @@ type Zone = {
   color: string;
   lightColor: string;
   icon: ReactNode;
+  pinImage: string;
+  unityGameId?: string;
   left: number;
   top: number;
   image: string;
   activities: Activity[];
+  /** Se muestra como recompensa cuando el jugador completa TODAS las actividades. */
+  extraInfo?: ExtraInfo;
+  /**
+   * Nivel del personaje que se necesita para desbloquear esta zona.
+   * Por defecto 1 (siempre disponible).
+   */
+  requiredLevel?: 1 | 2 | 3;
 };
 
 const characters: Character[] = [
@@ -164,6 +181,301 @@ const closingSlides = [
   },
 ];
 
+const pin = (file: string) => `/img/pines/${file}`;
+
+// Helpers tematicos: cada uno arma las 3 actividades (observacion/reto/decision)
+// con preguntas alineadas al proposito real del lugar.
+
+const createPorteriaActivities = (zoneId: string): Activity[] => [
+  {
+    id: `${zoneId}-observacion`,
+    title: 'Llegada al campus',
+    type: 'observacion',
+    description: 'Observa el primer punto de contacto con la universidad.',
+    question: '¿Para qué sirve principalmente una portería?',
+    options: ['Ingresar y orientarse al llegar', 'Hacer fila sin motivo', 'Bloquear el acceso'],
+    correct: 'Ingresar y orientarse al llegar',
+    reward: 100,
+    clarityReward: 6,
+    distortionReduction: 5,
+  },
+  {
+    id: `${zoneId}-reto`,
+    title: 'Primer paso de la expedición',
+    type: 'reto',
+    description: 'Asocia la portería con el comienzo del recorrido.',
+    question: '¿Qué actitud te ayuda a iniciar mejor la expedición?',
+    options: ['Observar y ubicarme antes de avanzar', 'Caminar sin mirar', 'Salir antes de explorar'],
+    correct: 'Observar y ubicarme antes de avanzar',
+    reward: 130,
+    clarityReward: 8,
+    distortionReduction: 6,
+  },
+  {
+    id: `${zoneId}-decision`,
+    title: 'Decido entrar',
+    type: 'decision',
+    description: 'Elige cómo iniciar tu recorrido.',
+    question: '¿Qué decides hacer al cruzar la portería?',
+    options: ['Iniciar la expedición con curiosidad', 'Volverme sin entrar', 'Quedarme en la entrada'],
+    correct: 'Iniciar la expedición con curiosidad',
+    reward: 150,
+    clarityReward: 10,
+    distortionReduction: 7,
+  },
+];
+
+const createAuditorioActivities = (zoneId: string): Activity[] => [
+  {
+    id: `${zoneId}-observacion`,
+    title: 'Observa el espacio',
+    type: 'observacion',
+    description: 'Reconoce qué pasa dentro de un auditorio universitario.',
+    question: '¿Qué actividad NO suele ocurrir en un auditorio?',
+    options: ['Una conferencia o evento académico', 'Una clase de laboratorio', 'Un encuentro cultural'],
+    correct: 'Una clase de laboratorio',
+    reward: 130,
+    clarityReward: 8,
+    distortionReduction: 6,
+  },
+  {
+    id: `${zoneId}-reto`,
+    title: 'Aprender en comunidad',
+    type: 'reto',
+    description: 'Conecta el auditorio con la formación más allá del aula.',
+    question: '¿Por qué asistir a eventos en auditorios suma a tu formación?',
+    options: [
+      'Permite escuchar invitados, ver casos reales y ampliar la mirada',
+      'Solo sirve para tomar fotos',
+      'No aporta nada al aprendizaje',
+    ],
+    correct: 'Permite escuchar invitados, ver casos reales y ampliar la mirada',
+    reward: 160,
+    clarityReward: 10,
+    distortionReduction: 8,
+  },
+  {
+    id: `${zoneId}-decision`,
+    title: 'Participar activamente',
+    type: 'decision',
+    description: 'Elige cómo aprovechar un evento de auditorio.',
+    question: 'Hay una conferencia abierta. ¿Qué decides?',
+    options: [
+      'Entrar, escuchar y preguntar al final',
+      'Pasar de largo sin interés',
+      'Entrar solo a usar el aire acondicionado',
+    ],
+    correct: 'Entrar, escuchar y preguntar al final',
+    reward: 190,
+    clarityReward: 12,
+    distortionReduction: 10,
+  },
+];
+
+const createAulaActivities = (zoneId: string): Activity[] => [
+  {
+    id: `${zoneId}-observacion`,
+    title: 'El aula como punto de encuentro',
+    type: 'observacion',
+    description: 'Observa qué hace única a un aula universitaria.',
+    question: '¿Qué pasa principalmente en un aula?',
+    options: [
+      'Se aprende, se discute y se trabaja en equipo',
+      'Solo se toman fotos',
+      'Únicamente se descansa',
+    ],
+    correct: 'Se aprende, se discute y se trabaja en equipo',
+    reward: 130,
+    clarityReward: 8,
+    distortionReduction: 6,
+  },
+  {
+    id: `${zoneId}-reto`,
+    title: 'Trabajo en equipo',
+    type: 'reto',
+    description: 'Relaciona el aula con la colaboración.',
+    question: '¿Qué hace que un trabajo grupal funcione mejor?',
+    options: [
+      'Escuchar a los demás y repartir tareas',
+      'Hacer todo solo a último minuto',
+      'Esperar a que alguien lo haga por ti',
+    ],
+    correct: 'Escuchar a los demás y repartir tareas',
+    reward: 160,
+    clarityReward: 10,
+    distortionReduction: 8,
+  },
+  {
+    id: `${zoneId}-decision`,
+    title: 'Preparar una exposición',
+    type: 'decision',
+    description: 'Toma una decisión académica realista.',
+    question: 'Tienes una exposición mañana. ¿Qué decides?',
+    options: [
+      'Repasar contenido y practicar con compañeros',
+      'No prepararte y improvisar',
+      'Faltar al aula ese día',
+    ],
+    correct: 'Repasar contenido y practicar con compañeros',
+    reward: 190,
+    clarityReward: 12,
+    distortionReduction: 10,
+  },
+];
+
+const createZonaVerdeActivities = (zoneId: string): Activity[] => [
+  {
+    id: `${zoneId}-observacion`,
+    title: 'Pausa dentro del recorrido',
+    type: 'observacion',
+    description: 'Reconoce qué aportan los espacios verdes en un campus.',
+    question: '¿Para qué sirven principalmente las zonas verdes?',
+    options: [
+      'Descansar, socializar y recargar energía',
+      'Solo decorar',
+      'Estudiar bajo el sol todo el día',
+    ],
+    correct: 'Descansar, socializar y recargar energía',
+    reward: 120,
+    clarityReward: 7,
+    distortionReduction: 5,
+  },
+  {
+    id: `${zoneId}-reto`,
+    title: 'Equilibrio entre estudio y descanso',
+    type: 'reto',
+    description: 'Relaciona la pausa con un buen aprendizaje.',
+    question: '¿Por qué tomar pausas mejora tu rendimiento académico?',
+    options: [
+      'El cerebro consolida información cuando descansa',
+      'Para perder tiempo sin culpa',
+      'Solo si estás cansado físicamente',
+    ],
+    correct: 'El cerebro consolida información cuando descansa',
+    reward: 150,
+    clarityReward: 9,
+    distortionReduction: 7,
+  },
+  {
+    id: `${zoneId}-decision`,
+    title: 'Cuidar el espacio',
+    type: 'decision',
+    description: 'Decide cómo te comportarías en una zona verde.',
+    question: 'Te sientas en el césped y tienes basura. ¿Qué haces?',
+    options: [
+      'Llevarla a una caneca antes de irme',
+      'Dejarla ahí, alguien la recogerá',
+      'Esconderla bajo una planta',
+    ],
+    correct: 'Llevarla a una caneca antes de irme',
+    reward: 180,
+    clarityReward: 11,
+    distortionReduction: 9,
+  },
+];
+
+const createPtarActivities = (zoneId: string): Activity[] => [
+  {
+    id: `${zoneId}-observacion`,
+    title: 'Infraestructura sostenible',
+    type: 'observacion',
+    description: 'Observa qué hace especial a la planta de tratamiento.',
+    question: '¿Qué es una PTAR?',
+    options: [
+      'Una planta de tratamiento de aguas residuales',
+      'Un parqueadero techado',
+      'Una bodega de almacenamiento',
+    ],
+    correct: 'Una planta de tratamiento de aguas residuales',
+    reward: 140,
+    clarityReward: 9,
+    distortionReduction: 7,
+  },
+  {
+    id: `${zoneId}-reto`,
+    title: 'Por qué importa el agua',
+    type: 'reto',
+    description: 'Conecta el tratamiento del agua con el cuidado del entorno.',
+    question: '¿Cuál es un beneficio de tratar el agua antes de devolverla al ambiente?',
+    options: [
+      'Reducir contaminación de ríos y suelos',
+      'Aumentar el uso de plástico',
+      'Eliminar zonas verdes',
+    ],
+    correct: 'Reducir contaminación de ríos y suelos',
+    reward: 170,
+    clarityReward: 11,
+    distortionReduction: 9,
+  },
+  {
+    id: `${zoneId}-decision`,
+    title: 'Hábito sostenible',
+    type: 'decision',
+    description: 'Elige una acción que apoye lo que la PTAR representa.',
+    question: '¿Qué hábito diario apoya el cuidado del agua?',
+    options: [
+      'Cerrar la llave mientras me enjabono',
+      'Dejar la llave abierta para que enfríe',
+      'Tirar aceites por el lavamanos',
+    ],
+    correct: 'Cerrar la llave mientras me enjabono',
+    reward: 200,
+    clarityReward: 13,
+    distortionReduction: 11,
+  },
+];
+
+const createGimnasioActivities = (zoneId: string): Activity[] => [
+  {
+    id: `${zoneId}-observacion`,
+    title: 'Bienestar universitario',
+    type: 'observacion',
+    description: 'Observa el rol del gimnasio en la vida universitaria.',
+    question: '¿Qué encuentras en un gimnasio universitario?',
+    options: [
+      'Máquinas, espacios deportivos y duchas',
+      'Solo salones de clase',
+      'Únicamente cafetería',
+    ],
+    correct: 'Máquinas, espacios deportivos y duchas',
+    reward: 130,
+    clarityReward: 8,
+    distortionReduction: 6,
+  },
+  {
+    id: `${zoneId}-reto`,
+    title: 'Cuerpo y mente',
+    type: 'reto',
+    description: 'Relaciona la actividad física con el estudio.',
+    question: '¿Cómo influye el ejercicio en tu desempeño académico?',
+    options: [
+      'Mejora la concentración y reduce el estrés',
+      'Solo cansa y baja notas',
+      'No tiene ningún efecto',
+    ],
+    correct: 'Mejora la concentración y reduce el estrés',
+    reward: 160,
+    clarityReward: 10,
+    distortionReduction: 8,
+  },
+  {
+    id: `${zoneId}-decision`,
+    title: 'Rutina equilibrada',
+    type: 'decision',
+    description: 'Decide cómo integrar el bienestar a tu semana.',
+    question: '¿Qué decisión apoya tu salud durante el semestre?',
+    options: [
+      'Dedicar al menos 2 horas semanales a moverme',
+      'Pasar todas las horas sentado sin pausas',
+      'Trasnochar todos los días',
+    ],
+    correct: 'Dedicar al menos 2 horas semanales a moverme',
+    reward: 190,
+    clarityReward: 12,
+    distortionReduction: 10,
+  },
+];
+
 const zones: Zone[] = [
   {
     id: 'biblioteca',
@@ -175,9 +487,12 @@ const zones: Zone[] = [
     color: 'bg-yellow-400',
     lightColor: 'bg-yellow-100 text-yellow-700',
     icon: <BookOpen size={16} />,
-    left: 25,
-    top: 30,
-    image: '/img/zonas/biblioteca.jpg',
+    pinImage: pin('Icono_Biblioteca.svg'),
+    requiredLevel: 2,
+    unityGameId: 'biblioteca',
+    left: 33.5,
+    top: 69.3,
+    image: '/img/mapaUAO.png',
     activities: [
       {
         id: 'biblioteca-observacion',
@@ -220,6 +535,15 @@ const zones: Zone[] = [
         distortionReduction: 10,
       },
     ],
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'La Biblioteca de la UAO ofrece libros recreativos y académicos, no solo material de carreras.',
+        'Tiene zonas silenciosas pensadas para estudio profundo y otras para trabajo grupal.',
+        'Cuenta con computadores y herramientas digitales disponibles para los estudiantes.',
+        'Es uno de los mejores puntos del campus para preparar exposiciones, trabajos y proyectos finales.',
+      ],
+    },
   },
   {
     id: 'laboratorios',
@@ -230,9 +554,12 @@ const zones: Zone[] = [
     color: 'bg-fuchsia-500',
     lightColor: 'bg-fuchsia-100 text-fuchsia-700',
     icon: <Brain size={16} />,
-    left: 38,
-    top: 40,
-    image: '/img/zonas/laboratorios.jpg',
+    pinImage: pin('Icono_Lab.svg'),
+    requiredLevel: 3,
+    unityGameId: 'laboratorio',
+    left: 39.1,
+    top: 51.2,
+    image: '/img/mapaUAO.png',
     activities: [
       {
         id: 'laboratorios-observacion',
@@ -271,6 +598,15 @@ const zones: Zone[] = [
         distortionReduction: 11,
       },
     ],
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'En la UAO hay laboratorios de electrónica, informática, multimedia, diseño gráfico y animación.',
+        'Aquí se desarrollan prototipos reales: desde circuitos hasta animaciones y experiencias interactivas.',
+        'Son espacios de equivocarse rápido: probar, fallar, corregir y mejorar es parte del aprendizaje.',
+        'Muchos proyectos de grado nacen y crecen en estos laboratorios.',
+      ],
+    },
   },
   {
     id: 'plazoleta',
@@ -281,9 +617,12 @@ const zones: Zone[] = [
     color: 'bg-emerald-500',
     lightColor: 'bg-emerald-100 text-emerald-700',
     icon: <MapPinned size={16} />,
-    left: 52,
-    top: 47,
-    image: '/img/zonas/plazoleta.jpg',
+    pinImage: pin('Icono_Cafe.svg'),
+    requiredLevel: 2,
+    unityGameId: 'cafeteria',
+    left: 87.1,
+    top: 61.2,
+    image: '/img/mapaUAO.png',
     activities: [
       {
         id: 'plazoleta-observacion',
@@ -326,57 +665,39 @@ const zones: Zone[] = [
         distortionReduction: 9,
       },
     ],
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'La cafetería de la UAO tiene tres pisos explorables con distintas tiendas de comida, bebidas y postres.',
+        'Es uno de los puntos más sociales del campus: ahí se hacen amigos, se planean grupos de estudio y se descansa entre clases.',
+        'Cerca está el gimnasio universitario, con máquinas, espacios deportivos y duchas.',
+        'La vida universitaria también pasa fuera del aula: en la plazoleta se vive el campus.',
+      ],
+    },
   },
   {
-    id: 'impacto',
-    title: 'Impacto UAO',
-    category: 'Institucional',
-    description: 'Zona para conocer proyectos, logros e historias con impacto social.',
-    narrative: 'Aquí se conectan las acciones de la universidad con la transformación del entorno.',
+    id: 'aulas-2',
+    title: 'Aulas 2',
+    category: 'Académico',
+    description: 'Bloque de aulas para clases, trabajos en grupo y formación académica.',
+    narrative: 'Aquí se viven clases, exposiciones y procesos de aprendizaje en comunidad.',
     color: 'bg-red-500',
     lightColor: 'bg-red-100 text-red-700',
-    icon: <Building2 size={16} />,
-    left: 64,
-    top: 31,
-    image: '/img/zonas/impacto.jpg',
-    activities: [
-      {
-        id: 'impacto-observacion',
-        title: 'Observa el impacto',
-        type: 'observacion',
-        description: 'Reconoce qué busca comunicar esta zona.',
-        question: '¿Qué muestra una zona de impacto institucional?',
-        options: ['Proyectos que transforman el entorno', 'Solo horarios', 'Publicidad sin contexto'],
-        correct: 'Proyectos que transforman el entorno',
-        reward: 130,
-        clarityReward: 8,
-        distortionReduction: 7,
-      },
-      {
-        id: 'impacto-reto',
-        title: 'Reto de transformación',
-        type: 'reto',
-        description: 'Relaciona el aprendizaje con acciones reales en la sociedad.',
-        question: '¿Cuál es una señal de impacto universitario?',
-        options: ['Soluciones para la comunidad', 'No compartir conocimiento', 'Evitar proyectos'],
-        correct: 'Soluciones para la comunidad',
-        reward: 170,
-        clarityReward: 11,
-        distortionReduction: 9,
-      },
-      {
-        id: 'impacto-decision',
-        title: 'Decisión con propósito',
-        type: 'decision',
-        description: 'Elige cómo actuarías frente a una oportunidad de impacto.',
-        question: '¿Qué decisión refleja compromiso social?',
-        options: ['Participar en proyectos útiles', 'Ignorar problemas reales', 'No colaborar'],
-        correct: 'Participar en proyectos útiles',
-        reward: 200,
-        clarityReward: 14,
-        distortionReduction: 12,
-      },
-    ],
+    icon: <GraduationCap size={16} />,
+    pinImage: pin('Icono_Aulas.svg'),
+    requiredLevel: 2,
+    left: 64.0,
+    top: 57.8,
+    image: '/img/mapaUAO.png',
+    activities: createAulaActivities('aulas-2'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'En las aulas se desarrolla el grueso del aprendizaje: clases, talleres y trabajos en equipo.',
+        'Son espacios pensados para discutir ideas, exponer proyectos y aprender colaborativamente.',
+        'Cada aula es un punto de encuentro entre estudiantes y profesores de distintas carreras.',
+      ],
+    },
   },
   {
     id: 'sostenibilidad',
@@ -388,9 +709,11 @@ const zones: Zone[] = [
     color: 'bg-green-500',
     lightColor: 'bg-green-100 text-green-700',
     icon: <Leaf size={16} />,
-    left: 75,
-    top: 54,
-    image: '/img/zonas/sostenibilidad.jpg',
+    pinImage: pin('Icono_ZonaVerde.svg'),
+    requiredLevel: 3,
+    left: 57.3,
+    top: 31.4,
+    image: '/img/mapaUAO.png',
     activities: [
       {
         id: 'sostenibilidad-observacion',
@@ -429,8 +752,318 @@ const zones: Zone[] = [
         distortionReduction: 12,
       },
     ],
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'La UAO trabaja con el concepto de Campus Sostenible: el campus mismo enseña a cuidar el entorno.',
+        'Se gestionan recursos como el agua, los residuos y la energía con criterios de impacto.',
+        'Los estudiantes son parte clave: separar residuos y cuidar zonas verdes también es aprendizaje.',
+      ],
+    },
+  },
+  {
+    id: 'porteria-1',
+    title: 'Portería 1',
+    category: 'Acceso',
+    description: 'Entrada principal por el costado occidental del campus.',
+    narrative: 'Punto de inicio para ubicarse y reconocer la ruta general.',
+    color: 'bg-blue-700',
+    lightColor: 'bg-blue-100 text-blue-700',
+    icon: <MapPinned size={16} />,
+    pinImage: pin('Icono_Porteria.svg'),
+    requiredLevel: 1,
+    left: 7.0,
+    top: 51.0,
+    image: '/img/mapaUAO.png',
+    activities: createPorteriaActivities('porteria-1'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'Las porterías son la primera impresión del campus: marcan el inicio de tu recorrido.',
+        'Cada portería conecta con rutas distintas del campus; conocerlas te ayuda a orientarte.',
+        'Aquí también pasan profesores, personal y visitantes; es un punto de encuentro inicial.',
+      ],
+    },
+  },
+  {
+    id: 'porteria-4',
+    title: 'Portería 4',
+    category: 'Acceso',
+    description: 'Acceso norte cercano a los parqueaderos y vías principales.',
+    narrative: 'Marca una entrada clave para comprender la circulación del campus.',
+    color: 'bg-blue-700',
+    lightColor: 'bg-blue-100 text-blue-700',
+    icon: <MapPinned size={16} />,
+    pinImage: pin('Icono_Porteria.svg'),
+    requiredLevel: 1,
+    left: 34.8,
+    top: 9.8,
+    image: '/img/mapaUAO.png',
+    activities: createPorteriaActivities('porteria-4'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'La portería norte queda cerca de los parqueaderos: es muy usada por quienes llegan en vehículo.',
+        'Aquí inicia el recorrido para muchos estudiantes que vienen del norte de la ciudad.',
+      ],
+    },
+  },
+  {
+    id: 'porteria-2',
+    title: 'Portería 2',
+    category: 'Acceso',
+    description: 'Acceso sur para cerrar el recorrido perimetral.',
+    narrative: 'Ayuda a conectar los desplazamientos entre zonas académicas y servicios.',
+    color: 'bg-blue-700',
+    lightColor: 'bg-blue-100 text-blue-700',
+    icon: <MapPinned size={16} />,
+    pinImage: pin('Icono_Porteria.svg'),
+    requiredLevel: 1,
+    left: 41.1,
+    top: 93.6,
+    image: '/img/mapaUAO.png',
+    activities: createPorteriaActivities('porteria-2'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'La portería sur conecta bien con las zonas académicas y la plazoleta central.',
+        'Es punto de salida frecuente al terminar la jornada universitaria.',
+      ],
+    },
+  },
+  {
+    id: 'porteria-3',
+    title: 'Portería 3',
+    category: 'Acceso',
+    description: 'Entrada del costado oriental del campus.',
+    narrative: 'Punto de referencia para las zonas ubicadas al extremo derecho del mapa.',
+    color: 'bg-blue-700',
+    lightColor: 'bg-blue-100 text-blue-700',
+    icon: <MapPinned size={16} />,
+    pinImage: pin('Icono_Porteria.svg'),
+    requiredLevel: 1,
+    left: 97.6,
+    top: 44.8,
+    image: '/img/mapaUAO.png',
+    activities: createPorteriaActivities('porteria-3'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'Por la portería oriental se llega directo a zonas como aulas, gimnasio y cafetería.',
+        'Es una de las entradas más activas en horarios pico de clase.',
+      ],
+    },
+  },
+  {
+    id: 'auditorio',
+    title: 'Auditorio',
+    category: 'Encuentro',
+    description: 'Espacio para eventos, charlas, conferencias y actividades culturales.',
+    narrative: 'Un lugar donde la comunidad se reúne para compartir ideas y experiencias.',
+    color: 'bg-pink-600',
+    lightColor: 'bg-pink-100 text-pink-700',
+    icon: <Building2 size={16} />,
+    pinImage: pin('Icono_Auditorio.svg'),
+    requiredLevel: 1,
+    left: 22.3,
+    top: 65.0,
+    image: '/img/mapaUAO.png',
+    activities: createAuditorioActivities('auditorio'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'En los auditorios UAO se hacen conferencias, eventos culturales y refuerzos de clases.',
+        'Aquí pasan actividades de mercadeo, publicidad, marketing y formación académica.',
+        'Asistir a estos eventos amplía tu mirada más allá del aula y conecta tu carrera con la realidad.',
+        'Muchos invitados externos vienen a compartir su experiencia profesional con estudiantes.',
+      ],
+    },
+  },
+  {
+    id: 'aulas-1',
+    title: 'Aulas 1',
+    category: 'Académico',
+    description: 'Bloque de aulas para clases, trabajos en grupo y formación académica.',
+    narrative: 'Aquí se viven clases, exposiciones y procesos de aprendizaje en comunidad.',
+    color: 'bg-red-500',
+    lightColor: 'bg-red-100 text-red-700',
+    icon: <GraduationCap size={16} />,
+    pinImage: pin('Icono_Aulas.svg'),
+    requiredLevel: 2,
+    left: 53.1,
+    top: 78.1,
+    image: '/img/mapaUAO.png',
+    activities: createAulaActivities('aulas-1'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'Las aulas son el corazón del proceso académico: clases, talleres y trabajos en equipo.',
+        'Cada espacio está diseñado para favorecer la discusión y el aprendizaje colaborativo.',
+      ],
+    },
+  },
+  {
+    id: 'aulas-3',
+    title: 'Aulas 3',
+    category: 'Académico',
+    description: 'Bloque académico ubicado hacia el costado oriental.',
+    narrative: 'Conecta el recorrido con otros edificios y rutas de aprendizaje.',
+    color: 'bg-red-500',
+    lightColor: 'bg-red-100 text-red-700',
+    icon: <GraduationCap size={16} />,
+    pinImage: pin('Icono_Aulas.svg'),
+    requiredLevel: 3,
+    left: 74.9,
+    top: 37.2,
+    image: '/img/mapaUAO.png',
+    activities: createAulaActivities('aulas-3'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'Estas aulas están cerca de zonas verdes y la plazoleta: ideal para combinar estudio con pausas activas.',
+        'Cambiar de aula entre clases también es parte de la experiencia universitaria.',
+      ],
+    },
+  },
+  {
+    id: 'aulas-4',
+    title: 'Aulas 4',
+    category: 'Académico',
+    description: 'Bloque académico del extremo superior derecho.',
+    narrative: 'Ayuda a completar la lectura del mapa en la zona norte.',
+    color: 'bg-red-500',
+    lightColor: 'bg-red-100 text-red-700',
+    icon: <GraduationCap size={16} />,
+    pinImage: pin('Icono_Aulas.svg'),
+    requiredLevel: 3,
+    left: 86.2,
+    top: 17.3,
+    image: '/img/mapaUAO.png',
+    activities: createAulaActivities('aulas-4'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'Este bloque suele tener buena conectividad con los laboratorios y zonas técnicas.',
+        'En las aulas también se preparan exposiciones, sustentaciones y presentaciones de proyectos.',
+      ],
+    },
+  },
+  {
+    id: 'zona-verde-sur',
+    title: 'Zona Verde Sur',
+    category: 'Sostenibilidad',
+    description: 'Área verde cercana a los bloques del costado sur.',
+    narrative: 'Refuerza la relación entre recorrido, descanso y cuidado del entorno.',
+    color: 'bg-green-500',
+    lightColor: 'bg-green-100 text-green-700',
+    icon: <Leaf size={16} />,
+    pinImage: pin('Icono_ZonaVerde.svg'),
+    requiredLevel: 2,
+    left: 70.7,
+    top: 73.2,
+    image: '/img/mapaUAO.png',
+    activities: createZonaVerdeActivities('zona-verde-sur'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'Las zonas verdes sirven para descansar, socializar y bajar el estrés entre clases.',
+        'Tomar pausas en zonas naturales ayuda a la concentración y al bienestar mental.',
+        'Cuidarlas es parte del compromiso de toda la comunidad universitaria.',
+      ],
+    },
+  },
+  {
+    id: 'ptar',
+    title: 'PTAR',
+    category: 'Sostenibilidad',
+    description: 'Planta de Tratamiento de Aguas Residuales de la UAO.',
+    narrative: 'El campus también enseña desde sus sistemas de cuidado e infraestructura.',
+    color: 'bg-sky-500',
+    lightColor: 'bg-sky-100 text-sky-700',
+    icon: <Leaf size={16} />,
+    pinImage: pin('Icono_PTAR.svg'),
+    requiredLevel: 3,
+    left: 89.5,
+    top: 37.4,
+    image: '/img/mapaUAO.png',
+    activities: createPtarActivities('ptar'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'PTAR significa Planta de Tratamiento de Aguas Residuales.',
+        'La UAO trata sus propias aguas antes de devolverlas al ambiente: es infraestructura sostenible.',
+        'Es un ejemplo claro de cómo el campus mismo enseña sobre gestión ambiental y cuidado del agua.',
+        'Cada hábito diario (cerrar la llave, no botar aceites al lavamanos) suma a este proceso.',
+      ],
+    },
+  },
+  {
+    id: 'gym',
+    title: 'Gimnasio',
+    category: 'Bienestar',
+    description: 'Zona de actividad física y bienestar universitario.',
+    narrative: 'Representa el equilibrio entre estudio, salud y vida universitaria.',
+    color: 'bg-orange-500',
+    lightColor: 'bg-orange-100 text-orange-700',
+    icon: <Sparkles size={16} />,
+    pinImage: pin('Icono_Gym.svg'),
+    requiredLevel: 3,
+    left: 98.2,
+    top: 79.3,
+    image: '/img/mapaUAO.png',
+    activities: createGimnasioActivities('gym'),
+    extraInfo: {
+      title: '¿Sabías que…?',
+      bullets: [
+        'El gimnasio universitario tiene máquinas, espacios deportivos y duchas.',
+        'Hacer ejercicio durante el semestre mejora la concentración y baja el estrés académico.',
+        'Está pensado para que los estudiantes equilibren estudio y bienestar físico.',
+      ],
+    },
   },
 ];
+
+// =============================================================
+// SISTEMA DE NIVELES
+// =============================================================
+// XP acumulado necesario para alcanzar cada nivel.
+// Indice 0 = nivel 1 (siempre 0).  Indice 1 = nivel 2.  Indice 2 = nivel 3.
+// Si en algun momento se quiere ajustar el balance, basta con cambiar estos
+// numeros - no toca la logica de recompensas de cada actividad.
+const LEVEL_THRESHOLDS = [0, 1500, 3500] as const;
+const MAX_LEVEL = LEVEL_THRESHOLDS.length;
+
+function getLevelFromXp(xp: number): number {
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (xp >= LEVEL_THRESHOLDS[i]) {
+      return i + 1;
+    }
+  }
+  return 1;
+}
+
+/**
+ * Devuelve cuanto XP lleva el jugador DENTRO del nivel actual y cuanto le
+ * falta para subir al siguiente. Si ya es nivel maximo, devuelve 100%.
+ */
+function getXpProgressInLevel(xp: number, level: number) {
+  const currentLevelMin = LEVEL_THRESHOLDS[level - 1] ?? 0;
+  const nextLevelMin = LEVEL_THRESHOLDS[level] ?? currentLevelMin;
+  const range = Math.max(1, nextLevelMin - currentLevelMin);
+  const current = Math.max(0, xp - currentLevelMin);
+  const isMax = level >= MAX_LEVEL;
+  const percent = isMax ? 100 : Math.min(100, Math.round((current / range) * 100));
+  return {
+    current,
+    needed: range,
+    percent,
+    isMax,
+  };
+}
+
+function isZoneUnlocked(zone: Zone, level: number): boolean {
+  return level >= (zone.requiredLevel ?? 1);
+}
 
 function getActivityKey(zoneId: string, activityId: string) {
   return `${zoneId}:${activityId}`;
@@ -473,17 +1106,28 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
     zone: Zone;
     activity: Activity;
   } | null>(null);
+  const [activeUnityZone, setActiveUnityZone] = useState<Zone | null>(null);
+  const [unlockedChallengeZones, setUnlockedChallengeZones] = useState<string[]>([]);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [xp, setXp] = useState(0);
   const [clarity, setClarity] = useState(0);
   const [distortion, setDistortion] = useState(100);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const level = Math.floor(xp / 600) + 1;
-  const currentLevelXp = xp % 600;
-  const progress = Math.min((currentLevelXp / 600) * 100, 100);
+  // Sistema de niveles basado en thresholds (ver LEVEL_THRESHOLDS arriba).
+  // NO se modifica el XP que dan las actividades; solo cambia cuanto se
+  // necesita para subir de nivel y, con ello, que zonas se desbloquean.
+  const level = getLevelFromXp(xp);
+  const levelProgress = getXpProgressInLevel(xp, level);
+  const progress = levelProgress.percent;
 
-  const progressText = useMemo(() => `${currentLevelXp}/600`, [currentLevelXp]);
+  const progressText = useMemo(
+    () =>
+      levelProgress.isMax
+        ? 'MAX'
+        : `${levelProgress.current}/${levelProgress.needed}`,
+    [levelProgress.isMax, levelProgress.current, levelProgress.needed],
+  );
 
   const completedZones = zones.filter(
     (zone) => getZoneCompletion(zone, completedActivities).isCompleted
@@ -496,6 +1140,7 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
       setShowClosingDialogue(true);
       setActiveZone(null);
       setActiveActivity(null);
+      setActiveUnityZone(null);
       setFeedback(null);
       return;
     }
@@ -524,6 +1169,22 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
     setFeedback('Respuesta correcta. Esta actividad ya estaba completada.');
   };
 
+  const isChallengeUnlocked = (zone: Zone) =>
+    !zone.unityGameId || unlockedChallengeZones.includes(zone.id);
+
+  const unlockChallengeZone = (zone: Zone, result?: UnityResultPayload) => {
+    setUnlockedChallengeZones((prev) =>
+      prev.includes(zone.id) ? prev : [...prev, zone.id]
+    );
+    setActiveUnityZone(null);
+    setActiveZone(zone);
+    setFeedback(
+      result
+        ? `Reto completado en Unity. Actividades desbloqueadas para ${zone.title}.`
+        : `Prueba completada. Actividades desbloqueadas para ${zone.title}.`
+    );
+  };
+
   return (
     <motion.div
       className="fixed inset-0 z-50 overflow-hidden bg-slate-950 text-slate-900"
@@ -542,8 +1203,10 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
             setClarity(0);
             setDistortion(100);
             setCompletedActivities([]);
+            setUnlockedChallengeZones([]);
             setActiveZone(null);
             setActiveActivity(null);
+            setActiveUnityZone(null);
             setFeedback(null);
           }}
         />
@@ -576,15 +1239,8 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
           onClose={onClose}
         />
       ) : (
-        <div className="relative h-full w-full overflow-hidden">
-          <img
-            src="/img/mapaUAO.png"
-            alt="Mapa del campus UAO"
-            className="absolute inset-0 h-full w-full object-cover"
-            draggable={false}
-          />
-
-          <div className="absolute inset-0 bg-black/25" />
+        <div className="relative h-full w-full overflow-hidden bg-slate-100">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),linear-gradient(135deg,#f8fafc,#e2e8f0)]" />
 
           <TopHud
             character={selectedCharacter}
@@ -596,51 +1252,45 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
             onClose={requestClose}
           />
 
-          <CategoryBar />
+          <div className="absolute inset-x-3 bottom-[84px] top-[96px] z-10 flex items-center justify-center sm:inset-x-5 sm:bottom-[88px] sm:top-[104px] md:bottom-6 md:top-[112px] lg:inset-x-8">
+            <div className="relative flex h-full w-full max-w-7xl items-center justify-center">
+              <div className="relative aspect-[1776/894] max-h-full w-full overflow-hidden rounded-[22px] border border-white/80 bg-white shadow-[0_20px_70px_-28px_rgba(15,23,42,0.55)] sm:rounded-[28px]">
+                <img
+                  src="/img/mapaUAO.png"
+                  alt="Mapa del campus UAO"
+                  className="h-full w-full object-cover"
+                  draggable={false}
+                />
 
-          <div className="absolute inset-0 z-10 pt-28 sm:pt-32 md:pt-36">
-            {zones.map((zone) => {
-              const completion = getZoneCompletion(zone, completedActivities);
+                <div className="absolute inset-0 bg-black/5" />
 
-              return (
-                <button
-                  key={zone.id}
-                  type="button"
-                  title={zone.title}
-                  onClick={() => {
-                    setActiveZone(zone);
-                    setFeedback(null);
-                  }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 group"
-                  style={{
-                    left: `${zone.left}%`,
-                    top: `${zone.top}%`,
-                  }}
-                >
-                  <div
-                    className={`relative flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-white text-white shadow-xl transition duration-200 group-hover:scale-110 sm:h-10 sm:w-10 md:h-12 md:w-12 ${zone.color}`}
-                  >
-                    {zone.icon}
-
-                    {completion.isCompleted && (
-                      <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white ring-2 ring-white md:h-5 md:w-5">
-                        <CheckCircle2 size={11} />
-                      </div>
-                    )}
-
-                    {completion.isPartial && (
-                      <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white ring-2 ring-white md:h-5 md:w-5">
-                        <Sparkles size={10} />
-                      </div>
-                    )}
-                  </div>
-
-                  <div
-                    className={`mx-auto h-4 w-4 -translate-y-2 rotate-45 border-b-[3px] border-r-[3px] border-white md:h-5 md:w-5 md:border-b-4 md:border-r-4 ${zone.color}`}
-                  />
-                </button>
-              );
-            })}
+                {zones.map((zone) => {
+                  const completion = getZoneCompletion(zone, completedActivities);
+                  const unlocked = isZoneUnlocked(zone, level);
+                  // NOTA: el efecto visual "gris" para zonas bloqueadas se aplica
+                  // dentro del componente ZonePin (debe leer la prop isLocked).
+                  // Mientras tanto, aqui bloqueamos funcionalmente el click.
+                  return (
+                    <ZonePin
+                      key={zone.id}
+                      zone={zone}
+                      completion={completion}
+                      isLocked={!unlocked}
+                      onSelect={() => {
+                        if (!unlocked) {
+                          setFeedback(
+                            `Esta zona se desbloquea al alcanzar el nivel ${zone.requiredLevel}.`,
+                          );
+                          return;
+                        }
+                        setActiveZone(zone);
+                        setFeedback(null);
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <BottomActions
@@ -656,11 +1306,30 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
                 zone={activeZone}
                 completion={getZoneCompletion(activeZone, completedActivities)}
                 completedActivities={completedActivities}
+                isChallengeUnlocked={isChallengeUnlocked(activeZone)}
                 onClose={() => setActiveZone(null)}
+                onStartChallenge={() => {
+                  setActiveUnityZone(activeZone);
+                  setFeedback(null);
+                }}
                 onActivity={(activity) => {
+                  if (!isChallengeUnlocked(activeZone)) {
+                    setFeedback('Completa primero el reto Unity para desbloquear estas actividades.');
+                    return;
+                  }
                   setActiveActivity({ zone: activeZone, activity });
                   setFeedback(null);
                 }}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {activeUnityZone && (
+              <UnityChallengeModal
+                zone={activeUnityZone}
+                onClose={() => setActiveUnityZone(null)}
+                onComplete={(result) => unlockChallengeZone(activeUnityZone, result)}
               />
             )}
           </AnimatePresence>
@@ -955,6 +1624,53 @@ function ProgressChip({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ZonePin({
+  zone,
+  completion,
+  onSelect,
+}: {
+  zone: Zone;
+  completion: ReturnType<typeof getZoneCompletion>;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={zone.title}
+      onClick={onSelect}
+      className="group absolute -translate-x-1/2 -translate-y-full"
+      style={{
+        left: `${zone.left}%`,
+        top: `${zone.top}%`,
+      }}
+    >
+      <span className="sr-only">{zone.title}</span>
+
+      <span className="relative block transition duration-200 group-hover:-translate-y-1 group-hover:scale-110">
+        <img
+          src={zone.pinImage}
+          alt=""
+          aria-hidden="true"
+          className="h-[35px] w-[26px] drop-shadow-[0_4px_7px_rgba(15,23,42,0.35)] sm:h-[42px] sm:w-[31px] md:h-[48px] md:w-[36px]"
+          draggable={false}
+        />
+
+        {completion.isCompleted && (
+          <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white ring-2 ring-white md:h-5 md:w-5">
+            <CheckCircle2 size={11} />
+          </span>
+        )}
+
+        {completion.isPartial && (
+          <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white ring-2 ring-white md:h-5 md:w-5">
+            <Sparkles size={10} />
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
+
 function TopHud({
   character,
   level,
@@ -973,18 +1689,18 @@ function TopHud({
   onClose: () => void;
 }) {
   return (
-    <div className="absolute left-3 right-3 top-3 z-30 rounded-2xl bg-emerald-100/85 px-3 py-2 shadow-lg backdrop-blur-md sm:left-4 sm:right-4 sm:top-4 sm:rounded-[28px] sm:px-5 sm:py-3">
-      <div className="flex items-center gap-2 sm:gap-4">
+    <div className="absolute left-3 right-3 top-3 z-30 rounded-2xl border border-white/80 bg-white/90 px-3 py-2 shadow-lg backdrop-blur-md sm:left-5 sm:right-5 sm:top-4 sm:px-4 md:left-8 md:right-8">
+      <div className="flex items-center gap-2 sm:gap-3">
         <img
           src={character.chibi}
           alt={character.name}
-          className="h-11 w-11 rounded-full bg-white object-contain p-1 shadow-md sm:h-14 sm:w-14 md:h-20 md:w-20"
+          className="h-10 w-10 rounded-full bg-slate-50 object-contain p-1 shadow-md sm:h-12 sm:w-12 md:h-14 md:w-14"
           draggable={false}
         />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-lg font-black leading-none text-slate-900 sm:text-2xl md:text-3xl">
+            <h1 className="truncate text-base font-black leading-none text-slate-900 sm:text-xl md:text-2xl">
               {character.name}
             </h1>
 
@@ -997,7 +1713,7 @@ function TopHud({
             Nivel {level} | {progressText} XP
           </p>
 
-          <div className="mt-1.5 h-2.5 w-full max-w-[240px] overflow-hidden rounded-full bg-slate-700/70 sm:h-3 md:max-w-[320px]">
+          <div className="mt-1.5 h-2 w-full max-w-[220px] overflow-hidden rounded-full bg-slate-200 sm:max-w-[280px]">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all"
               style={{ width: `${progress}%` }}
@@ -1009,7 +1725,7 @@ function TopHud({
           </p>
         </div>
 
-        <div className="hidden min-w-[180px] grid-cols-2 gap-2 md:grid">
+        <div className="hidden min-w-[170px] grid-cols-2 gap-2 md:grid">
           <MiniMetric label="Claridad" value={clarity} positive />
           <MiniMetric label="Distorsión" value={distortion} />
         </div>
@@ -1132,15 +1848,21 @@ function ZonePanel({
   zone,
   completion,
   completedActivities,
+  isChallengeUnlocked,
   onClose,
+  onStartChallenge,
   onActivity,
 }: {
   zone: Zone;
   completion: ReturnType<typeof getZoneCompletion>;
   completedActivities: string[];
+  isChallengeUnlocked: boolean;
   onClose: () => void;
+  onStartChallenge: () => void;
   onActivity: (activity: Activity) => void;
 }) {
+  const hasUnityChallenge = Boolean(zone.unityGameId);
+
   return (
     <motion.div
       className="absolute bottom-3 left-3 right-3 z-40 max-h-[72vh] overflow-y-auto rounded-[26px] bg-white p-4 shadow-2xl sm:bottom-5 sm:left-5 sm:right-5 sm:max-h-[74vh] sm:p-5 md:bottom-auto md:left-auto md:right-6 md:top-[140px] md:max-h-[calc(100vh-165px)] md:w-[min(92vw,440px)] md:rounded-[32px] md:p-6 xl:top-[180px] xl:max-h-[calc(100vh-210px)]"
@@ -1215,20 +1937,59 @@ function ZonePanel({
         {zone.narrative}
       </p>
 
+      {hasUnityChallenge && (
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-slate-700">
+                Reto Unity
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500 sm:text-sm">
+                {isChallengeUnlocked
+                  ? 'Reto completado. Las actividades de descubrimiento ya estan disponibles.'
+                  : 'Completa el minijuego para desbloquear las actividades de descubrimiento.'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onStartChallenge}
+              className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:brightness-95 ${
+                isChallengeUnlocked ? 'bg-emerald-600' : 'bg-slate-900'
+              }`}
+            >
+              {isChallengeUnlocked ? 'Repetir reto' : 'Iniciar reto'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mt-5 space-y-3">
         <h3 className="text-xs font-black uppercase tracking-wide text-slate-700 sm:text-sm">
           Actividades de descubrimiento
         </h3>
 
+        {hasUnityChallenge && !isChallengeUnlocked && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold leading-relaxed text-slate-500 sm:text-sm">
+            Estas actividades se desbloquean despues de completar el reto Unity de esta zona.
+          </div>
+        )}
+
         {zone.activities.map((activity) => {
           const completed = completedActivities.includes(getActivityKey(zone.id, activity.id));
+          const disabled = hasUnityChallenge && !isChallengeUnlocked;
 
           return (
             <button
               key={activity.id}
               type="button"
+              disabled={disabled}
               onClick={() => onActivity(activity)}
-              className="flex w-full items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 sm:p-4"
+              className={`flex w-full items-start justify-between gap-3 rounded-2xl border p-3 text-left shadow-sm transition sm:p-4 ${
+                disabled
+                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-55'
+                  : 'border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50'
+              }`}
             >
               <div>
                 <p className="text-sm font-black text-slate-900">
@@ -1252,6 +2013,98 @@ function ZonePanel({
           );
         })}
       </div>
+    </motion.div>
+  );
+}
+
+function UnityChallengeModal({
+  zone,
+  onClose,
+  onComplete,
+}: {
+  zone: Zone;
+  onClose: () => void;
+  onComplete: (result?: UnityResultPayload) => void;
+}) {
+  const [isReady, setIsReady] = useState(false);
+
+  return (
+    <motion.div
+      className="absolute inset-0 z-[70] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-sm sm:p-5"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="flex h-[min(86vh,760px)] w-[min(96vw,1180px)] flex-col overflow-hidden rounded-[28px] bg-slate-950 shadow-2xl ring-1 ring-white/10"
+        initial={{ opacity: 0, scale: 0.96, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 18 }}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-slate-900 px-4 py-3 text-white sm:px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src={zone.pinImage}
+              alt=""
+              aria-hidden="true"
+              className="h-9 w-auto shrink-0"
+              draggable={false}
+            />
+
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">
+                Reto Unity
+              </p>
+              <h2 className="truncate text-base font-black sm:text-lg">
+                {zone.title}
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <span
+              className={`hidden rounded-full px-3 py-1 text-[10px] font-black uppercase sm:inline-flex ${
+                isReady ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-200'
+              }`}
+            >
+              {isReady ? 'Unity listo' : 'Cargando'}
+            </span>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+              aria-label="Cerrar reto Unity"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 bg-black">
+          <UnityGame
+            key={zone.id}
+            gameId={zone.unityGameId}
+            className="h-full w-full"
+            onReady={() => setIsReady(true)}
+            onGameOver={(result) => onComplete(result)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-white/10 bg-slate-900 px-4 py-3 text-xs text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <span>
+            Temporalmente estas zonas usan el build Unity disponible para validar el flujo.
+          </span>
+
+          <button
+            type="button"
+            onClick={() => onComplete()}
+            className="rounded-full bg-white px-4 py-2 font-black text-slate-900 transition hover:bg-slate-200"
+          >
+            Completar prueba
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

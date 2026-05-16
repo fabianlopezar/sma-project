@@ -1,41 +1,43 @@
 import { useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Compass, Map, Gamepad2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Compass, Gamepad2 } from 'lucide-react';
 
 import ReferenceCampusMap from '../components/ReferenceCampusMap';
 import BuildingPanel from '../components/BuildingPanel';
 import IntroOverlay from '../components/IntroOverlay';
-import VocationalQuiz from '../components/VocationalQuiz';
 import ProgramsView from '../components/ProgramsView';
-import TestimonialsView from '../components/TestimonialsView';
-import ImpactView from '../components/ImpactView';
-import CampusLifeView from '../components/CampusLifeView';
 import InformacionView from '../components/InfoPanel';
 import ExpedicionUAOview from '../components/ExpedicionUAOview';
+import HamburgerMenu, { type HamburgerMenuItem } from '../components/HamburgerMenu';
 
-type ActiveView =
-  | null
-  | 'orientacion'
-  | 'programas'
-  | 'testimonios'
-  | 'impacto'
-  | 'vida'
-  | 'informacion'
-  | 'expedicion';
+const navItems: HamburgerMenuItem[] = [
+  { id: 'mapa-referencia', label: 'Mapa 2D', icon: 'map' },
+  { id: 'programas', label: 'Programas', icon: 'book' },
+  { id: 'informacion', label: 'Informacion', icon: 'info' },
+];
+
+type ActiveView = null | 'programas' | 'informacion' | 'expedicion';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [showIntro, setShowIntro] = useState(true);
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>(null);
 
-  const handleBuildingClick = (id: string) => {
-    setActiveBuilding(id);
-  };
+  const handleMenuSelect = (id: string) => {
+    if (id === 'mapa-referencia') {
+      navigate('/mapa-referencia');
+      return;
+    }
 
-  const handleAction = (id: string) => {
     setActiveBuilding(null);
     setActiveView(id as ActiveView);
+  };
+
+  const handleBuildingAction = (id: string) => {
+    setActiveBuilding(null);
+    setActiveView(id === 'programas' || id === 'informacion' ? id : 'expedicion');
   };
 
   const openExpedicion = () => {
@@ -47,11 +49,10 @@ const Index = () => {
   const closeView = () => setActiveView(null);
 
   return (
-    <div className="w-full h-screen overflow-hidden relative bg-background">
-      {/* 2D Scene */}
+    <div className="relative h-screen w-full overflow-hidden bg-background">
       <Suspense
         fallback={
-          <div className="w-full h-full flex items-center justify-center bg-background">
+          <div className="flex h-full w-full items-center justify-center bg-background">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
@@ -62,101 +63,51 @@ const Index = () => {
         }
       >
         <ReferenceCampusMap
-          onBuildingClick={handleBuildingClick}
+          onBuildingClick={(id) => setActiveBuilding(id)}
           activeBuilding={activeBuilding}
         />
       </Suspense>
 
-      {/* HUD */}
       {!showIntro && !activeView && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-5 left-5 right-5 z-40 flex items-start justify-between gap-3 sm:top-6 sm:left-6 sm:right-6"
+          className="fixed left-5 top-5 z-40 flex flex-col items-start gap-2 sm:left-6 sm:top-6"
         >
-          <div className="flex flex-col items-start gap-2">
-            <div className="glass-panel rounded-2xl px-4 py-2.5">
-              <h2 className="font-display text-[11px] font-bold text-foreground tracking-[0.18em] uppercase leading-none">
-                Campus Virtual
-              </h2>
-            </div>
-
-            <button
-              type="button"
-              onClick={openExpedicion}
-              className="glass-panel inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-bold text-primary hover:text-primary-foreground hover:bg-primary hover:border-primary/30 transition-all duration-200"
-            >
-              <Gamepad2 className="size-[15px] shrink-0" strokeWidth={2.25} />
-              Expedición UAO
-            </button>
+          <div className="glass-panel rounded-2xl px-4 py-2.5">
+            <h2 className="font-display text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-foreground">
+              Campus Virtual
+            </h2>
           </div>
 
-          <Link
-            to="/mapa-referencia"
-            aria-label="Ver mapa de referencia en dos dimensiones"
-            className="glass-panel inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/25 transition-all duration-200"
+          <button
+            type="button"
+            onClick={openExpedicion}
+            className="glass-panel inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-bold text-primary transition-all duration-200 hover:border-primary/30 hover:bg-primary hover:text-primary-foreground"
           >
-            <Map className="size-[15px] shrink-0 opacity-70" strokeWidth={2.25} />
-            Mapa 2D
-          </Link>
+            <Gamepad2 className="size-[15px] shrink-0" strokeWidth={2.25} />
+            Expedicion WoW
+          </button>
         </motion.div>
       )}
 
-      {/* Navigation pills */}
-      {!showIntro && !activeView && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex flex-wrap justify-center gap-1 glass-panel rounded-full px-1.5 py-1.5 max-w-[calc(100vw-1.5rem)] sm:bottom-6"
-        >
-          {[
-            { id: 'orientacion', label: '🧠 Orientación' },
-            { id: 'programas', label: '📚 Programas' },
-            { id: 'testimonios', label: '🎥 Testimonios' },
-            { id: 'impacto', label: '🏛 Impacto' },
-            { id: 'vida', label: '🎓 Campus' },
-            { id: 'informacion', label: 'ℹ️ Información' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveView(item.id as ActiveView)}
-              className="px-3.5 py-2 rounded-full text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/90 transition-colors duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
-            >
-              {item.label}
-            </button>
-          ))}
-        </motion.div>
+      {!showIntro && (
+        <HamburgerMenu
+          items={navItems}
+          onSelect={handleMenuSelect}
+          position="top-right"
+        />
       )}
 
-      {/* Panels */}
       <BuildingPanel
         buildingId={activeBuilding}
         onClose={closePanel}
-        onAction={handleAction}
+        onAction={handleBuildingAction}
       />
 
-      {/* Full views */}
       <AnimatePresence>
-        {activeView === 'orientacion' && (
-          <VocationalQuiz onClose={closeView} />
-        )}
-
         {activeView === 'programas' && (
           <ProgramsView onClose={closeView} />
-        )}
-
-        {activeView === 'testimonios' && (
-          <TestimonialsView onClose={closeView} />
-        )}
-
-        {activeView === 'impacto' && (
-          <ImpactView onClose={closeView} />
-        )}
-
-        {activeView === 'vida' && (
-          <CampusLifeView onClose={closeView} />
         )}
 
         {activeView === 'informacion' && (
@@ -168,10 +119,14 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Intro */}
       <AnimatePresence>
         {showIntro && (
-          <IntroOverlay onEnter={() => setShowIntro(false)} />
+          <IntroOverlay
+            onEnter={() => {
+              setShowIntro(false);
+              setActiveView('expedicion');
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

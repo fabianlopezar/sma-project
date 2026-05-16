@@ -1,79 +1,132 @@
 // COPIAR ESTE ARCHIVO A:
 //   SistemaMultimedia/Assets/Scripts/GameManager.cs
 //
-// Y crear en la escena un GameObject vacio llamado EXACTAMENTE "GameManager"
-// con este script adjunto.
+// GameManager: el "router" del puente Unity <-> React.
 //
-// React llama a:    sendMessage("GameManager", "StartMiniGame", "memorama")
-// Unity responde con: ReactNotifyGameOver("memorama", 100, 25)
+// Setup:
+// 1. Crear una escena "Bootstrap" (la primera que se carga al abrir el WebGL).
+// 2. En Bootstrap, crear un GameObject vacio llamado EXACTAMENTE "GameManager"
+//    y adjuntarle este script.
+// 3. Agregar Bootstrap como PRIMERA escena en File > Build Settings.
+// 4. Agregar las demas escenas de minijuegos despues (JuegoCafeteria, etc.).
+//
+// React llama:           sendMessage("GameManager", "StartMiniGame", "cafeteria")
+// Unity responde con:    ReactNotifyGameOver("cafeteria")    (cuando termine el juego)
 
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    // Importa las funciones definidas en ReactBridge.jslib.
-    // Estas declaraciones SOLO funcionan en el build WebGL real;
-    // en el editor de Unity hay que envolverlas en #if.
+    // Singleton: facilita encontrar la instancia desde los minijuegos
+    public static GameManager Instance { get; private set; }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")] private static extern void ReactNotifyReady();
-    [DllImport("__Internal")] private static extern void ReactNotifyGameOver(string gameId, int score, int xp);
+    [DllImport("__Internal")] private static extern void ReactNotifyGameOver(string gameId);
 #else
-    private static void ReactNotifyReady() { Debug.Log("[Editor] ReactNotifyReady"); }
-    private static void ReactNotifyGameOver(string gameId, int score, int xp) {
-        Debug.Log($"[Editor] ReactNotifyGameOver gameId={gameId} score={score} xp={xp}");
+    // Stubs para que compile y debuguee en el Editor de Unity
+    private static void ReactNotifyReady() {
+        Debug.Log("[Editor] ReactNotifyReady (en WebGL real, avisa a React)");
+    }
+    private static void ReactNotifyGameOver(string gameId) {
+        Debug.Log($"[Editor] ReactNotifyGameOver gameId={gameId} (en WebGL real, avisa a React)");
     }
 #endif
 
+    // Mapeo de gameId (lo que envia React) -> nombre exacto de escena de Unity.
+    // El gameId debe coincidir EXACTO con el que envia la web.
+    // El nombre de escena debe coincidir EXACTO con el archivo .unity (sin extension).
+    private readonly Dictionary<string, string> gameIdToScene = new Dictionary<string, string>
+    {
+        { "cafeteria",   "JuegoCafeteria" },
+        { "biblioteca",  "JuegoBiblioteca" },
+        { "laboratorio", "JuegoLaboratorio" },
+        // Agrega aqui los demas minijuegos conforme los crees.
+    };
+
+    // El gameId del minijuego actualmente cargado.
+    // Se guarda para saber a quien "atribuir" el FinishGame.
     private string currentGameId;
+
+    void Awake()
+    {
+        // Singleton + persistencia entre escenas
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     void Start()
     {
-        // Avisamos al React de afuera que ya estamos listos.
         ReactNotifyReady();
+        Debug.Log("[GameManager] Listo. Esperando comandos de React.");
     }
 
+    // ============================================================
+    // METODOS LLAMADOS DESDE REACT (via sendMessage)
+    // ============================================================
+
     /// <summary>
-    /// Lo llama React con: sendMessage("GameManager", "StartMiniGame", "<id>")
+    /// React llama: sendMessage("GameManager", "StartMiniGame", "cafeteria")
+    /// Carga la escena del minijuego correspondiente.
     /// </summary>
     public void StartMiniGame(string gameId)
     {
+        Debug.Log($"[GameManager] StartMiniGame recibido: {gameId}");
         currentGameId = gameId;
-        Debug.Log($"[Unity] StartMiniGame recibido: {gameId}");
 
-        // Aqui mete tu logica real: cargar la escena del minijuego, etc.
-        switch (gameId)
+        if (gameIdToScene.TryGetValue(gameId, out string sceneName))
         {
-            case "memorama":
-                // SceneManager.LoadScene("MemoramaScene");
-                break;
-            case "trivia":
-                // SceneManager.LoadScene("TriviaScene");
-                break;
-            case "puzzle":
-                // SceneManager.LoadScene("PuzzleScene");
-                break;
-            default:
-                Debug.LogWarning($"[Unity] gameId desconocido: {gameId}");
-                break;
+            SceneManager.LoadScene(sceneName);
+        }
+        else
+        {
+            Debug.LogError($"[GameManager] gameId desconocido: '{gameId}'. " +
+                           $"Agregalo al diccionario gameIdToScene.");
         }
     }
 
+    // ============================================================
+    // METODO QUE LLAMAN LOS MINIJUEGOS (al terminar la fase)
+    // ============================================================
+
     /// <summary>
-    /// Llamala desde el minijuego cuando el jugador termina.
-    /// Por ejemplo: FindObjectOfType&lt;GameManager&gt;().FinishGame(120, 30);
+    /// Lo llama el minijuego cuando el jugador termina la fase.
+    ///
+    /// Desde un script de minijuego (C#):
+    ///     GameManager.Instance.FinishGame();
+    ///
+    /// Desde un boton en la escena (sin codigo):
+    ///     OnClick() -> arrastra el GameObject "GameManager" -> elige GameManager.FinishGame
     /// </summary>
-    public void FinishGame(int score, int xp)
+    public void FinishGame()
     {
-        ReactNotifyGameOver(currentGameId ?? "", score, xp);
+        Debug.Log($"[GameManager] FinishGame: gameId={currentGameId}");
+
+        // 1. Avisar a React que la fase termino
+        ReactNotifyGameOver(currentGameId ?? "unknown");
+
+        // 2. Volver a la escena Bootstrap (libera memoria del minijuego)
+        SceneManager.LoadScene("Bootstrap");
+
+        currentGameId = null;
     }
 
-    // Boton de prueba: simula que el juego termino con score 100 y xp 25.
-    // Util para validar la comunicacion antes de tener un minijuego real.
-    [ContextMenu("Test GameOver")]
+    // ============================================================
+    // UTILIDADES DE DEBUG (solo en Editor)
+    // ============================================================
+
+    [ContextMenu("Test: simular FinishGame")]
     public void DebugTriggerGameOver()
     {
-        ReactNotifyGameOver(currentGameId ?? "test", 100, 25);
+        currentGameId = currentGameId ?? "cafeteria";
+        FinishGame();
     }
 }
