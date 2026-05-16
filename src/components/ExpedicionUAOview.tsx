@@ -1110,8 +1110,6 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
   const [unlockedChallengeZones, setUnlockedChallengeZones] = useState<string[]>([]);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [xp, setXp] = useState(0);
-  const [clarity, setClarity] = useState(0);
-  const [distortion, setDistortion] = useState(100);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   // Sistema de niveles basado en thresholds (ver LEVEL_THRESHOLDS arriba).
@@ -1134,6 +1132,16 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
   ).length;
 
   const totalActivities = zones.reduce((acc, zone) => acc + zone.activities.length, 0);
+
+  // Claridad y Distorsion son DERIVADAS del avance total de actividades.
+  // Asi: 0/total = 0% claridad / 100% distorsion al inicio.
+  //      total/total = 100% claridad / 0% distorsion al completar TODO.
+  // (clarityReward / distortionReduction en cada Activity quedan como info
+  //  visual en el modal de la actividad, ya no afectan el calculo.)
+  const clarity = totalActivities === 0
+    ? 0
+    : Math.round((completedActivities.length / totalActivities) * 100);
+  const distortion = 100 - clarity;
 
   const requestClose = () => {
     if (selectedCharacter && !showIntroDialogue) {
@@ -1159,8 +1167,7 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
 
     if (!alreadyCompleted) {
       setXp((prev) => prev + activity.reward);
-      setClarity((prev) => Math.min(prev + activity.clarityReward, 100));
-      setDistortion((prev) => Math.max(prev - activity.distortionReduction, 0));
+      // claridad/distorsion se recalculan solas a partir de completedActivities
       setCompletedActivities((prev) => [...prev, key]);
       setFeedback(`¡Correcto! Ganaste ${activity.reward} XP.`);
       return;
@@ -1200,8 +1207,7 @@ export default function ExpedicionUAOView({ onClose }: ExpedicionUAOViewProps) {
             setShowIntroDialogue(true);
             setShowClosingDialogue(false);
             setXp(0);
-            setClarity(0);
-            setDistortion(100);
+            // claridad/distorsion se reinician solas al limpiar completedActivities
             setCompletedActivities([]);
             setUnlockedChallengeZones([]);
             setActiveZone(null);
@@ -1628,25 +1634,40 @@ function ZonePin({
   zone,
   completion,
   onSelect,
+  isLocked = false,
 }: {
   zone: Zone;
   completion: ReturnType<typeof getZoneCompletion>;
   onSelect: () => void;
+  isLocked?: boolean;
 }) {
+  const titleText = isLocked
+    ? `${zone.title} · Se desbloquea en nivel ${zone.requiredLevel ?? 1}`
+    : zone.title;
+
   return (
     <button
       type="button"
-      title={zone.title}
+      title={titleText}
       onClick={onSelect}
-      className="group absolute -translate-x-1/2 -translate-y-full"
+      aria-disabled={isLocked}
+      className={`group absolute -translate-x-1/2 -translate-y-full ${
+        isLocked ? 'cursor-not-allowed' : ''
+      }`}
       style={{
         left: `${zone.left}%`,
         top: `${zone.top}%`,
       }}
     >
-      <span className="sr-only">{zone.title}</span>
+      <span className="sr-only">{titleText}</span>
 
-      <span className="relative block transition duration-200 group-hover:-translate-y-1 group-hover:scale-110">
+      <span
+        className={`relative block transition duration-200 ${
+          isLocked
+            ? 'opacity-50 grayscale'
+            : 'group-hover:-translate-y-1 group-hover:scale-110'
+        }`}
+      >
         <img
           src={zone.pinImage}
           alt=""
@@ -1655,13 +1676,23 @@ function ZonePin({
           draggable={false}
         />
 
-        {completion.isCompleted && (
+        {/* Candadito sobre el pin cuando esta bloqueado por nivel */}
+        {isLocked && (
+          <span
+            aria-hidden="true"
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 text-white ring-2 ring-white shadow-md text-[10px] md:h-5 md:w-5 md:text-xs"
+          >
+            🔒
+          </span>
+        )}
+
+        {!isLocked && completion.isCompleted && (
           <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white ring-2 ring-white md:h-5 md:w-5">
             <CheckCircle2 size={11} />
           </span>
         )}
 
-        {completion.isPartial && (
+        {!isLocked && completion.isPartial && (
           <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white ring-2 ring-white md:h-5 md:w-5">
             <Sparkles size={10} />
           </span>
