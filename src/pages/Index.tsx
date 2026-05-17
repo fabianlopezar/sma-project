@@ -1,7 +1,9 @@
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Compass, Gamepad2 } from 'lucide-react';
+
+import { playGlobalMusic } from '../lib/globalMusic';
 
 import ReferenceCampusMap from '../components/ReferenceCampusMap';
 import BuildingPanel from '../components/BuildingPanel';
@@ -47,6 +49,12 @@ const Index = () => {
 
   const closePanel = () => setActiveBuilding(null);
   const closeView = () => setActiveView(null);
+
+  // Musica de fondo global de la app. Suena en TODO momento salvo cuando se
+  // ejecutan los retos Unity (ExpedicionUAOview se encarga de pausarla).
+  useEffect(() => {
+    playGlobalMusic('/audio/music/ambiente_web.mp3', 0.25);
+  }, []);
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-background">
